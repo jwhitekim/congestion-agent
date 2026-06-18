@@ -17,7 +17,10 @@ import domains
 from agent import ClaudeAgent, DEFAULT_MODEL, MODEL_ALIASES
 from utils.display import print_result
 from utils.video import sample_frames
-from dotenv import load_dotenv 
+from utils.custom_logger import GetLogger
+from dotenv import load_dotenv
+
+logger = GetLogger("main", "logs/main.log")
 
 
 def main():
@@ -41,14 +44,14 @@ def main():
     if not args.video:
         parser.error("--video 인자가 필요합니다.")
     if not Path(args.video).exists():
-        print(f"오류: 파일 없음 → {args.video}")
+        logger.error(f"파일 없음: {args.video}")
         sys.exit(1)
 
     # ── [도메인 선택] ─────────────────────────────────────────────────────────
     try:
         domain_config = domains.load(args.domain)
     except ValueError as e:
-        print(f"도메인 오류: {e}")
+        logger.error(f"도메인 오류: {e}")
         sys.exit(1)
 
     # ── [두뇌 생성 — 도메인을 외부에서 주입] ─────────────────────────────────
@@ -59,27 +62,22 @@ def main():
             model=MODEL_ALIASES[args.model],
         )
     except RuntimeError as e:
-        print(f"초기화 실패: {e}")
+        logger.error(f"초기화 실패: {e}")
         sys.exit(1)
 
     results = []
-    print("=" * 60)
-    print(f"  도메인  : {args.domain}")
-    print(f"  모델    : {args.model} ({MODEL_ALIASES[args.model]})")
-    print(f"  동영상  : {args.video}")
-    print(f"  간격    : {args.interval}초")
-    print("=" * 60)
+    logger.info(f"도메인: {args.domain} | 모델: {args.model} ({MODEL_ALIASES[args.model]}) | 동영상: {args.video} | 간격: {args.interval}초")
 
     # ── [프레임별 분석] ───────────────────────────────────────────────────────
     for frame, timestamp in sample_frames(args.video, args.interval):
-        print(f"\n[{timestamp:6.1f}초] 분석 중...")
+        logger.info(f"[{timestamp:6.1f}초] 분석 중...")
         try:
             result = agent.run(frame)
             result["timestamp"] = timestamp
             results.append(result)
             print_result(result)
         except Exception as e:
-            print(f"  오류: {e}")
+            logger.error(f"프레임 분석 오류 ({timestamp:.1f}초): {e}")
             results.append({"timestamp": timestamp, "error": str(e)})
 
     # ── [결과 저장] ───────────────────────────────────────────────────────────
@@ -87,9 +85,7 @@ def main():
     with open(output, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
 
-    print("\n" + "=" * 60)
-    print(f"  완료: {len(results)}프레임 → {output}")
-    print("=" * 60)
+    logger.info(f"완료: {len(results)}프레임 → {output}")
 
 
 if __name__ == "__main__":

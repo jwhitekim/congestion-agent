@@ -17,8 +17,10 @@ import anthropic
 import cv2
 import numpy as np
 
-# 두뇌는 BaseTool 인터페이스만 안다. 구체적인 도구 클래스는 모른다.
 from tools.base import BaseTool
+from utils.custom_logger import GetLogger
+
+logger = GetLogger("agent", "logs/agent.log")
 
 
 # 짧은 별칭 → 실제 모델 ID
@@ -161,9 +163,9 @@ class ClaudeAgent:
                 tool_results = []
                 for block in response.content:
                     if block.type == "tool_use":
-                        print(f"    → 도구 호출: {block.name}")
+                        logger.debug(f"도구 호출: {block.name}")
                         result_str = self._dispatch(block.name, block.input)
-                        print(f"    ← 결과    : {json.loads(result_str)}")
+                        logger.debug(f"도구 결과: {json.loads(result_str)}")
                         tool_results.append({
                             "type": "tool_result",
                             "tool_use_id": block.id,

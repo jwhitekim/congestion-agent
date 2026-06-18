@@ -6,6 +6,10 @@ import cv2
 import numpy as np
 from typing import Generator, Tuple
 
+from utils.custom_logger import GetLogger
+
+logger = GetLogger("video", "logs/video.log")
+
 
 def sample_frames(
     video_path: str, interval_sec: int
@@ -22,7 +26,7 @@ def sample_frames(
 
     fps = cap.get(cv2.CAP_PROP_FPS)
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    print(f"동영상 정보: FPS={fps:.1f}, 총 {total}프레임, {total / fps:.1f}초")
+    logger.info(f"동영상 정보: FPS={fps:.1f}, 총 {total}프레임, {total / fps:.1f}초")
 
     frame_step = max(1, int(fps * interval_sec))
     frame_idx = 0

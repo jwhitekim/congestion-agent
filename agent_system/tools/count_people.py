@@ -9,6 +9,9 @@ import numpy as np
 from ultralytics import YOLO
 
 from .base import BaseTool
+from utils.custom_logger import GetLogger
+
+logger = GetLogger("tool", "logs/tool.log")
 
 
 class CountPeopleTool(BaseTool):
@@ -17,10 +20,10 @@ class CountPeopleTool(BaseTool):
     PERSON_CLASS_ID = 0  # COCO 데이터셋: class 0 = person
 
     def __init__(self, model_path: str = "yolov8m.pt"):
-        print("YOLOv8m 모델 로딩 중...")
+        logger.info("YOLOv8m 모델 로딩 중...")
         self.model = YOLO(model_path)
         self._frame: np.ndarray | None = None
-        print("YOLOv8m 준비 완료.\n")
+        logger.info("YOLOv8m 준비 완료.")
 
     @property
     def schema(self) -> dict:
