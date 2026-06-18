@@ -1,0 +1,13 @@
+# vscode settings
+.vscode/
+
+# Python cache files
+/**/__pycache__/
+*.pyc
+*.pyo   
+
+# prompt files
+prompt.md
+
+# .env files
+.env
