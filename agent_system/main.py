@@ -13,8 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-import domains
-from agent import ClaudeAgent, DEFAULT_MODEL, MODEL_ALIASES
+from agent import domains, ClaudeAgent, DEFAULT_MODEL, MODEL_ALIASES
 from utils.display import print_result
 from utils.custom_logger import GetLogger
 from dotenv import load_dotenv
