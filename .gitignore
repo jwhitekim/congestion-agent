@@ -11,3 +11,17 @@ prompt.md
 
 # .env files
 .env
+
+# runtime outputs
+logs/
+uploads/
+results/
+results.json
+web.stdout.log
+web.stderr.log
+
+# video files
+sample.mp4
+
+# model files
+yolov8m.pt

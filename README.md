@@ -1,39 +1,50 @@
-# CongestAgent
+# LLMAgentSystem
 
-LLM(Claude)을 두뇌로, YOLOv8을 손발로 사용하는 영상 혼잡도 분석 에이전트.
+LLM(두뇌 역할, Claude)이 판단하고, CV 도구(손발 역할)가 측정하는 영상 혼잡도 분석 에이전트 시스템.
 
 ## 구조
 
 ```
-CongestAgent/
-├── requirements.txt
-└── agent_system/
-    ├── main.py           # 진입점
-    ├── agent/            # 두뇌: ClaudeAgent (도메인 중립)
-    ├── tools/            # 손발: YOLOv8 사람 카운팅
-    ├── domains/          # 도메인 설정 (혼잡도 판단 기준 + 사용 도구)
-    └── utils/            # 공통 유틸 (동영상 샘플링, 콘솔 출력)
+LLMAgentSystem/
+  agent_system/
+    agent/           # LLM 층: ClaudeAgent (도메인 중립, tool-use 루프만 담당)
+    tools/           # 도구(손발 역할): 사실 측정만. 판단 안 함
+      detection/     # YOLOv8 탐지
+      track_people_tool.py
+      bytetrack_adapter.py
+    domains/         # 도메인 설정: 시스템 프롬프트 + 도구 묶음
+    utils/           # video.py(프레임 추출), display.py, custom_logger.py
+    main.py          # CLI 진입점
+  web/               # 데모용 웹 레이어 (agent_system import해서 씀)
+    web.py
+    frontend/
+  logs/
+  requirements.txt
 ```
 
 ## 동작 원리
 
 ```
-프레임 이미지
-    ↓
-Claude (두뇌) ──── count_people 도구 호출 ────→ YOLOv8 (손발)
-    ↑                                                ↓
-    └──────────── 사람 수(정수) ←────────────────────┘
-    ↓
-[YOLO 카운트] + [장면 맥락 직접 관찰] → 혼잡도 종합 판단
-    ↓
-{ people_count, congestion_level, reasoning, action }
+main.py / web.py
+  ↓  build_vision_content()  ← 구간 메타 + 샘플 프레임 (도메인 중립)
+ClaudeAgent.run(content)
+  ↓  LLM(두뇌 역할)이 프레임을 보고 판단
+  └─ 필요하다고 판단되면 → track_people 도구 호출
+                              ↓ YOLO 탐지 + ByteTrack 추적
+                              ↓ 위치·bbox·구역 인원수 반환 (사실만)
+  ↓  LLM이 분포를 해석해 최종 판단
+{ total_people, distribution_summary, congestion_level, local_hotspots, reasoning, action }
 ```
+
+핵심: LLM이 도구를 먼저 다 돌리지 않는다. 프레임을 본 뒤 필요하면 스스로 호출한다.
 
 ## 설치
 
 ```bash
 pip install -r requirements.txt
 ```
+
+`supervision`의 ByteTrack을 사용한다 (`pip install supervision` 포함).
 
 ## 환경 변수
 
@@ -45,41 +56,32 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 ## 실행
 
-```bash
-# 기본 실행 (5초 간격, opus 모델)
-python agent_system/main.py --video sample.mp4
+### CLI
 
-# 옵션 지정
+```bash
+python agent_system/main.py --video sample.mp4
 python agent_system/main.py --video sample.mp4 --interval 10 --model sonnet
 ```
-
-### 옵션
 
 | 인자 | 기본값 | 설명 |
 |------|--------|------|
 | `--video` | (필수) | 분석할 동영상 파일 경로 |
-| `--interval` | `5` | 프레임 샘플링 간격 (초) |
-| `--model` | `opus` | 사용할 모델: `opus` / `sonnet` / `haiku` |
+| `--interval` | `5` | 구간 길이 (초) |
+| `--model` | `opus` | `opus` / `sonnet` / `haiku` |
 | `--domain` | `congestion` | 분석 도메인 |
 
-## 출력
+결과는 콘솔 출력 + `results.json` 저장.
 
-콘솔에 프레임별 결과를 출력하고, `results.json`으로 저장.
+### Web 데모
 
+```bash
+python web/web.py
 ```
-[ 10.0초] 분석 중...
-    → 도구 호출: count_people
-    ← 결과    : {'count': 7}
-  혼잡도  : 🟡 MEDIUM
-  인원수  : 7명
-  조치    : monitor
-  근거    : 좁은 복도에 7명이 밀집되어 있어 이동에 불편이 예상됨
-```
+
+`http://127.0.0.1:8000` 에서 영상 업로드 후 결과 확인. 결과 JSON은 `results/`, 업로드 영상은 `uploads/`에 저장.
 
 ## 도메인/도구 확장
 
-새 도메인 추가: `agent_system/domains/` 에 모듈 작성 후 `__init__.py` 레지스트리에 등록.
-
-새 도구 추가: `agent_system/tools/` 에 `BaseTool` 상속 클래스 작성.
-
-두뇌(`agent/`) 코드는 수정 불필요.
+- 새 도구: `tools/`에 `BaseTool` 상속 클래스 작성.
+- 새 도메인: `domains/`에 `system_prompt + tools` 묶음 작성 후 `__init__.py` 레지스트리에 등록.
+- `agent/` 코드는 수정 불필요.
