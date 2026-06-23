@@ -11,3 +11,11 @@ prompt.md
 
 # .env files
 .env
+
+# runtime outputs
+logs/
+uploads/
+results/
+results.json
+web.stdout.log
+web.stderr.log

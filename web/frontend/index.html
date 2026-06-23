@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LLM Agent Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <div class="viewer">
+          <video id="preview" class="video-preview" controls muted playsinline></video>
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon">□</div>
+            <div>Select a video to analyze</div>
+          </div>
+        </div>
+
+        <aside class="control-panel">
+          <header class="panel-header">
+            <div>
+              <h1>LLM Agent Demo</h1>
+              <p>Tool-use based congestion analysis</p>
+            </div>
+            <span id="statusBadge" class="status-badge idle">Idle</span>
+          </header>
+
+          <form id="analysisForm" class="analysis-form">
+            <label class="field">
+              <span>Video file</span>
+              <input id="videoInput" name="video" type="file" accept="video/*" required />
+            </label>
+
+            <div class="field-grid">
+              <label class="field">
+                <span>Model</span>
+                <select name="model">
+                  <option value="opus">Opus</option>
+                  <option value="sonnet">Sonnet</option>
+                  <option value="haiku">Haiku</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Interval sec</span>
+                <input name="interval" type="number" min="1" step="1" value="5" />
+              </label>
+            </div>
+
+            <input name="domain" type="hidden" value="congestion" />
+
+            <button id="submitButton" class="primary-button" type="submit">
+              <span class="button-icon">▶</span>
+              Analyze
+            </button>
+          </form>
+
+          <section class="result-panel" aria-live="polite">
+            <div class="metric-row">
+              <div class="metric">
+                <span class="metric-label">People</span>
+                <strong id="peopleValue">-</strong>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Level</span>
+                <strong id="levelValue">-</strong>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Action</span>
+                <strong id="actionValue">-</strong>
+              </div>
+            </div>
+
+            <div class="reasoning">
+              <span>Distribution</span>
+              <p id="distributionValue">Result appears here.</p>
+            </div>
+
+            <div class="reasoning">
+              <span>Reasoning</span>
+              <p id="reasoningValue">-</p>
+            </div>
+
+            <div id="fileInfo" class="file-info"></div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

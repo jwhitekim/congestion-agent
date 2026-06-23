@@ -83,3 +83,48 @@ python agent_system/main.py --video sample.mp4 --interval 10 --model sonnet
 새 도구 추가: `agent_system/tools/` 에 `BaseTool` 상속 클래스 작성.
 
 두뇌(`agent/`) 코드는 수정 불필요.
+## Web UI
+
+터미널 출력 대신 브라우저에서 영상을 업로드하고 결과를 확인하려면:
+
+```bash
+python agent_system/web.py
+```
+
+브라우저에서 `http://127.0.0.1:8000`을 열면 됩니다. 분석 결과 JSON은 `results/`에, 업로드 영상은 `uploads/`에 저장됩니다.
+# LLMAgentSystem
+
+## Current structure
+
+```text
+LLMAgentSystem/
+  agent_system/      # pure agent core
+    agent/           # domain-neutral ClaudeAgent brain
+    tools/           # measurable fact tools
+    domains/         # domain prompts and injected tool sets
+    main.py          # CLI entrypoint
+  web/               # demo web layer
+    web.py           # Flask server importing agent_system
+    frontend/
+      index.html
+      app.js
+      styles.css
+  logs/
+  requirements.txt
+```
+
+## CLI
+
+```bash
+python agent_system/main.py --video sample.mp4 --interval 5 --domain congestion
+```
+
+The CLI loads a domain config, injects `system_prompt` and `tools` into the domain-neutral `ClaudeAgent`, splits the video into interval segments, then lets Claude decide whether to call `track_people`.
+
+## Web demo
+
+```bash
+python web/web.py
+```
+
+Open `http://127.0.0.1:8000`. The web layer is only a demo wrapper and imports the agent core.
