@@ -57,6 +57,7 @@ def main():
             system_prompt=domain_config["system_prompt"],
             tools=domain_config["tools"],
             model=MODEL_ALIASES[args.model],
+            output_schema=domain_config.get("output_schema"),
         )
     except RuntimeError as e:
         logger.error(f"초기화 실패: {e}")

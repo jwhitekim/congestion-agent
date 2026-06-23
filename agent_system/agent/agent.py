@@ -175,7 +175,13 @@ class ClaudeAgent:
         → 동일한 두뇌를 어떤 도메인에도 재사용 가능.
     """
 
-    def __init__(self, system_prompt: str, tools: List[BaseTool], model: str = DEFAULT_MODEL):
+    def __init__(
+        self,
+        system_prompt: str,
+        tools: List[BaseTool],
+        model: str = DEFAULT_MODEL,
+        output_schema: dict | None = None,
+    ):
         # ── 두뇌 초기화 ────────────────────────────────────────────────────────
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
@@ -188,6 +194,7 @@ class ClaudeAgent:
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
         self.system_prompt = system_prompt
+        self.output_schema = output_schema
 
         # ── 손발 등록 ──────────────────────────────────────────────────────────
         # 두뇌는 도구 이름으로만 도구를 찾는다. 구현 내용은 모른다.
@@ -225,6 +232,39 @@ class ClaudeAgent:
         if start != -1 and end > start:
             return json.loads(text[start:end])
         raise ValueError(f"JSON 파싱 실패:\n{text}")
+
+    def _validate_output(self, result: dict) -> dict:
+        """도메인이 제공한 최종 출력 계약을 검증한다."""
+        if self.output_schema is None:
+            return result
+        if not isinstance(result, dict):
+            raise ValueError("Claude 최종 응답은 JSON 객체여야 합니다.")
+
+        required = self.output_schema.get("required", [])
+        missing = [field for field in required if field not in result]
+        if missing:
+            raise ValueError(f"Claude 최종 응답에 필수 필드가 없습니다: {missing}")
+
+        properties = self.output_schema.get("properties", {})
+        for field, rules in properties.items():
+            if field not in result:
+                continue
+
+            value = result[field]
+            expected_type = rules.get("type")
+            if expected_type == "string" and not isinstance(value, str):
+                raise ValueError(f"'{field}' 필드는 문자열이어야 합니다: {value!r}")
+            if expected_type == "number" and not isinstance(value, (int, float)):
+                raise ValueError(f"'{field}' 필드는 숫자여야 합니다: {value!r}")
+
+            allowed_values = rules.get("enum")
+            if allowed_values is not None and value not in allowed_values:
+                raise ValueError(
+                    f"'{field}' 값이 허용 범위를 벗어났습니다: {value!r}. "
+                    f"허용값: {allowed_values}"
+                )
+
+        return result
 
     # ─────────────────────────────────────────────────────────────────────────
     # 핵심 메서드 — 두뇌의 전체 실행 흐름
@@ -278,7 +318,7 @@ class ClaudeAgent:
             elif response.stop_reason == "end_turn":
                 for block in response.content:
                     if hasattr(block, "text") and block.text.strip():
-                        return self._parse_json(block.text)
+                        return self._validate_output(self._parse_json(block.text))
                 raise ValueError("Claude 응답에 텍스트 블록이 없습니다.")
 
             else:
