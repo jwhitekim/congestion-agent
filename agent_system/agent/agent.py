@@ -28,19 +28,8 @@ class ClaudeAgent:
     비디오, 이미지 등 입력 모달리티도 모른다. content 리스트를 받아 tool-use 루프만 돌린다.
     """
 
-<<<<<<< HEAD
-    def __init__(
-        self,
-        system_prompt: str,
-        tools: List[BaseTool],
-        model: str = DEFAULT_MODEL,
-        output_schema: dict | None = None,
-    ):
-        # ── 두뇌 초기화 ────────────────────────────────────────────────────────
-=======
     def __init__(self, system_prompt: str, tools: List[BaseTool], model: str = MODEL_ALIASES[DEFAULT_MODEL]):
         load_dotenv()
->>>>>>> fdf65c50c4eef1a2dd6a166dae53786401e6a42d
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY environment variable is required.")
@@ -48,21 +37,8 @@ class ClaudeAgent:
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
         self.system_prompt = system_prompt
-<<<<<<< HEAD
-        self.output_schema = output_schema
-
-        # ── 손발 등록 ──────────────────────────────────────────────────────────
-        # 두뇌는 도구 이름으로만 도구를 찾는다. 구현 내용은 모른다.
-        self.tools: List[BaseTool] = tools
-        self._tool_map: dict[str, BaseTool] = {t.schema["name"]: t for t in tools}
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # 내부 헬퍼
-    # ─────────────────────────────────────────────────────────────────────────
-=======
         self.tools = tools
         self._tool_map: dict[str, BaseTool] = {tool.schema["name"]: tool for tool in tools}
->>>>>>> fdf65c50c4eef1a2dd6a166dae53786401e6a42d
 
     def _dispatch(self, tool_name: str, tool_input: dict) -> str:
         """LLM(두뇌 역할)이 요청한 도구(손발 역할)를 이름으로 찾아 실행한다. 도구 실패도 JSON으로 돌려준다."""
