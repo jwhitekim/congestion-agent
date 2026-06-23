@@ -13,6 +13,7 @@ if str(AGENT_DIR) not in sys.path:
 
 import domains
 from agent import ClaudeAgent, DEFAULT_MODEL, MODEL_ALIASES
+from utils.video import build_vision_content
 
 UPLOAD_DIR = ROOT_DIR / "uploads"
 RESULTS_DIR = ROOT_DIR / "results"
@@ -36,8 +37,9 @@ def _analyze(video_path: Path, domain_name: str, model_alias: str, interval_sec:
         model=MODEL_ALIASES[model_alias],
     )
 
-    # 데모 웹은 첫 구간을 바로 분석한다. 도구 호출 여부는 ClaudeAgent 내부에서 두뇌가 결정한다.
-    result = agent.run(str(video_path), start_sec=0.0, end_sec=interval_sec)
+    # 데모 웹은 첫 구간을 바로 분석한다. 도구 호출 여부는 ClaudeAgent 내부에서 LLM(두뇌 역할)이 결정한다.
+    content = build_vision_content(str(video_path), 0.0, interval_sec)
+    result = agent.run(content)
     return {
         "domain": domain_name,
         "model": model_alias,

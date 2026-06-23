@@ -20,7 +20,6 @@ class YoloPredictor:
         )[0]
         return process_predicted_results(result)
 
-
 def process_predicted_results(result):
     boxes = result.boxes.xyxy
     confidences = result.boxes.conf

@@ -1,6 +1,6 @@
 # CongestAgent
 
-LLM(Claude)을 두뇌로, YOLOv8을 손발로 사용하는 영상 혼잡도 분석 에이전트.
+LLM(두뇌 역할, Claude)과 YOLOv8 도구(손발 역할)를 조합한 영상 혼잡도 분석 에이전트 시스템.
 
 ## 구조
 
@@ -9,8 +9,8 @@ CongestAgent/
 ├── requirements.txt
 └── agent_system/
     ├── main.py           # 진입점
-    ├── agent/            # 두뇌: ClaudeAgent (도메인 중립)
-    ├── tools/            # 손발: YOLOv8 사람 카운팅
+    ├── agent/            # LLM 층(판단 본체): ClaudeAgent (도메인 중립)
+    ├── tools/            # 도구(손발 역할): YOLOv8 사람 카운팅
     ├── domains/          # 도메인 설정 (혼잡도 판단 기준 + 사용 도구)
     └── utils/            # 공통 유틸 (동영상 샘플링, 콘솔 출력)
 ```
@@ -20,7 +20,7 @@ CongestAgent/
 ```
 프레임 이미지
     ↓
-Claude (두뇌) ──── count_people 도구 호출 ────→ YOLOv8 (손발)
+LLM(두뇌 역할, Claude) ── count_people 도구 호출 ──→ YOLOv8 도구(손발 역할)
     ↑                                                ↓
     └──────────── 사람 수(정수) ←────────────────────┘
     ↓
@@ -120,6 +120,16 @@ python agent_system/main.py --video sample.mp4 --interval 5 --domain congestion
 ```
 
 The CLI loads a domain config, injects `system_prompt` and `tools` into the domain-neutral `ClaudeAgent`, splits the video into interval segments, then lets Claude decide whether to call `track_people`.
+
+`track_people` uses YOLO detection plus the official FoundationVision ByteTrack implementation. Install ByteTrack so `yolox.tracker.byte_tracker.BYTETracker` is importable:
+
+```bash
+git clone https://github.com/FoundationVision/ByteTrack.git
+cd ByteTrack
+pip install -r requirements.txt
+python setup.py develop
+pip install cython_bbox
+```
 
 ## Web demo
 

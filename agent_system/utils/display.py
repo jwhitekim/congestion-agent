@@ -1,21 +1,16 @@
-# =============================================================================
-# utils/display.py  —  콘솔 출력 유틸리티
-# =============================================================================
+def print_result(record: dict) -> None:
+    segment = record.get("segment", {})
+    prefix = f"[segment {record.get('segment_index', '?')}: {segment.get('start_sec')}~{segment.get('end_sec')}s]"
 
-LEVEL_ICON = {
-    "Normal": "🟢",
-    "Common": "🟡",
-    "Crowded": "🟠",
-    "Very Crowded": "🔴",
-    "low": "🟢",
-    "medium": "🟡",
-    "high": "🔴",
-}
+    if "error" in record:
+        print(f"{prefix} ERROR: {record['error']}")
+        return
 
-
-def print_result(result: dict) -> None:
-    level = result.get("congestion_level", "?")
-    print(f"  혼잡도  : {LEVEL_ICON.get(level, '⚪')} {level}")
-    print(f"  인원수  : {result.get('people_count', '?')}명")
-    print(f"  조치    : {result.get('action', '?')}")
-    print(f"  근거    : {result.get('reasoning', '')}")
+    result = record.get("result", record)
+    print(prefix)
+    print(f"  total_people        : {result.get('total_people', '?')}")
+    print(f"  congestion_level    : {result.get('congestion_level', '?')}")
+    print(f"  action              : {result.get('action', '?')}")
+    print(f"  local_hotspots      : {result.get('local_hotspots', [])}")
+    print(f"  distribution_summary: {result.get('distribution_summary', '')}")
+    print(f"  reasoning           : {result.get('reasoning', '')}")
