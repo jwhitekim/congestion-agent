@@ -77,7 +77,7 @@ def sample_frames(video_path: str, start_sec: float, end_sec: float | None, max_
 
 
 def build_vision_content(video_path: str, start_sec: float, end_sec: float | None, max_frames: int = 4) -> list[dict]:
-    """Claude API messages의 user content로 쓸 리스트를 만든다. LLM 층이 비디오를 몰라도 된다."""
+    """구간 메타데이터와 샘플 프레임을 Claude user content 리스트로 만든다. 도메인 중립."""
     path = str(Path(video_path).resolve())
     frames = sample_frames(path, start_sec, end_sec, max_frames=max_frames)
     segment_label = f"{start_sec:.2f}s~{end_sec:.2f}s" if end_sec is not None else f"{start_sec:.2f}s~end"
@@ -86,15 +86,10 @@ def build_vision_content(video_path: str, start_sec: float, end_sec: float | Non
         {
             "type": "text",
             "text": (
-                "Analyze this video segment.\n"
                 f"video_path: {path}\n"
                 f"segment: {segment_label}\n"
                 f"start_sec: {start_sec}\n"
-                f"end_sec: {end_sec}\n\n"
-                "먼저 제공된 프레임을 직접 보고 판단하라. "
-                "사람 위치/이동/구역별 분포 사실이 더 필요하다고 스스로 판단되면 "
-                "track_people 도구를 호출하라. 도구를 호출할 때는 위 video_path, "
-                "start_sec, end_sec 값을 사용하라."
+                f"end_sec: {end_sec}"
             ),
         }
     ]

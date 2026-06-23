@@ -20,8 +20,14 @@ class TrackPeopleTool(BaseTool):
     """
 
     def __init__(self, model_path: str = "yolov8m.pt", default_sample_every_n: int = 5):
-        self.predictor = YoloPredictor(model_path)
+        self._model_path = model_path
+        self._predictor: YoloPredictor | None = None  # LLM이 실제로 호출할 때만 로드
         self.default_sample_every_n = default_sample_every_n
+
+    def _get_predictor(self) -> YoloPredictor:
+        if self._predictor is None:
+            self._predictor = YoloPredictor(self._model_path)
+        return self._predictor
 
     @property
     def schema(self) -> dict:
@@ -94,7 +100,7 @@ class TrackPeopleTool(BaseTool):
                     timestamp = frame_id / fps if fps else None
                     # 도구는 사람 클래스 탐지와 FoundationVision ByteTrack 추적까지만 수행한다.
                     # 혼잡 판단은 절대 하지 않는다.
-                    detections = self.predictor.predict(frame, classes=[0], conf=0.1)
+                    detections = self._get_predictor().predict(frame, classes=[0], conf=0.1)
                     tracked = tracker.update(detections, image_shape=frame.shape[:2])
                     frame_people = []
 
@@ -152,10 +158,6 @@ class TrackPeopleTool(BaseTool):
             "people": sorted(tracks.values(), key=lambda item: item["track_id"]),
             "zone_grid": {"rows": grid_rows, "cols": grid_cols},
             "zone_counts": self._build_zone_counts(latest_positions, width, height, grid_rows, grid_cols),
-            "measurement_note": (
-                "Facts only: positions, tracks, frame observations, and zone counts. "
-                "The brain must interpret distribution and decide congestion/action."
-            ),
         }
 
     def _build_zone_counts(self, latest_positions, width: int, height: int, rows: int, cols: int) -> list[dict]:
