@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>LLM Agent Demo</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/public/styles.css" />
   </head>
   <body>
     <main class="app-shell">
@@ -56,38 +56,26 @@
             </button>
           </form>
 
-          <section class="result-panel" aria-live="polite">
-            <div class="metric-row">
-              <div class="metric">
-                <span class="metric-label">People</span>
-                <strong id="peopleValue">-</strong>
-              </div>
-              <div class="metric">
-                <span class="metric-label">Level</span>
-                <strong id="levelValue">-</strong>
-              </div>
-              <div class="metric">
-                <span class="metric-label">Action</span>
-                <strong id="actionValue">-</strong>
-              </div>
-            </div>
-
-            <div class="reasoning">
-              <span>Distribution</span>
-              <p id="distributionValue">Result appears here.</p>
-            </div>
-
-            <div class="reasoning">
-              <span>Reasoning</span>
-              <p id="reasoningValue">-</p>
-            </div>
-
-            <div id="fileInfo" class="file-info"></div>
-          </section>
+          <div id="fileInfo" class="file-info"></div>
         </aside>
+      </section>
+
+      <!-- 분석 결과 섹션 — 분석 완료 후 표시 -->
+      <section id="resultsSection" class="results-section" hidden>
+        <div class="results-header">
+          <span class="results-title">분석 결과</span>
+          <span id="resultsMeta" class="results-meta"></span>
+        </div>
+
+        <!-- 혼잡도 흐름 타임라인 (텍스트 기반 띠) -->
+        <div id="timelineStrip" class="timeline-strip" title="세그먼트별 혼잡도 흐름"></div>
+        <div id="timelineLabels" class="timeline-labels"></div>
+
+        <!-- 프레임 카드 리스트 (아코디언) -->
+        <div id="frameCards" class="frame-cards"></div>
       </section>
     </main>
 
-    <script src="/app.js"></script>
+    <script src="/public/app.js"></script>
   </body>
 </html>
