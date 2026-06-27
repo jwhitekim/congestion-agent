@@ -5,7 +5,7 @@ from pathlib import Path
 
 import cv2
 
-from utils.base import BaseTool
+from agent.base import BaseTool
 from .models.tracker import ByteTrackAdapter
 from .models.detector import YoloPredictor
 from .models.result import build_track_result, build_segment_result

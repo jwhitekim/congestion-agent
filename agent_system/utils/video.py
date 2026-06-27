@@ -5,6 +5,17 @@ from pathlib import Path
 
 from utils.content import text_block, image_block
 
+_MAX_FRAME_LONG_EDGE = 1280
+
+
+def _resize_for_vision(frame, max_long_edge: int = _MAX_FRAME_LONG_EDGE):
+    height, width = frame.shape[:2]
+    long_edge = max(width, height)
+    if long_edge <= max_long_edge:
+        return frame
+    scale = max_long_edge / long_edge
+    return cv2.resize(frame, (int(width * scale), int(height * scale)), interpolation=cv2.INTER_AREA)
+
 
 class BaseVideoCapture:
     def __init__(self, video_path: str | Path):
@@ -59,7 +70,7 @@ class CustomCongestionVideoCapture(BaseVideoCapture):
             ok, frame = self.cap.read()
             if not ok:
                 continue
-            frame = self._resize_for_vision(frame)
+            frame = _resize_for_vision(frame)
             ok, encoded = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), self.JPEG_QUALITY])
             if not ok:
                 continue
