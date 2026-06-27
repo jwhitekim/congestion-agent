@@ -14,8 +14,8 @@ prompt.md
 
 # runtime outputs
 logs/
-uploads/
-results/
+data/
+outputs/
 results.json
 web.stdout.log
 web.stderr.log
