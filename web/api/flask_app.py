@@ -1,4 +1,3 @@
-import json
 import logging
 import uuid
 
@@ -6,14 +5,15 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
 from web.settings import *
-from web.backend.analyzer import analyze_video
-from agent_system.agent import DEFAULT_MODEL, MODEL_ALIASES
+import agent_system.domains as domains
+from agent_system.agent import ClaudeAgent, DEFAULT_MODEL, MODEL_ALIASES
+from agent_system.utils.runner import run_segments, save_result
+from agent_system.utils.video import CustomCongestionVideoCapture
 from agent_system.utils.custom_logger import GetLogger
 
 load_dotenv(ROOT_DIR / ".env")
 logger = GetLogger("web", str(LOGS_DIR / "web.log"))
 app = Flask(__name__, template_folder=STATIC_DIR, static_folder=STATIC_DIR, static_url_path="/public")
-
 
 for _handler in logger.handlers:
     app.logger.addHandler(_handler)
@@ -56,17 +56,27 @@ def analyze():
     )
 
     try:
-        payload = analyze_video(video_path, domain_name, model_alias, interval_sec)
+        domain_config = domains.load(domain_name)
+        agent = ClaudeAgent(
+            system_prompt=domain_config["system_prompt"],
+            tools=domain_config["tools"],
+            model=MODEL_ALIASES[model_alias],
+        )
+        with CustomCongestionVideoCapture(video_path) as video_capture:
+            results, video_info = run_segments(agent, video_capture, interval_sec)
+        result_path = save_result(results, video_info, video_path, domain_name, model_alias, interval_sec, RESULTS_DIR)
     except Exception as exc:
         logger.exception("Analysis failed: id=%s", upload_id)
         return jsonify({"error": str(exc)}), 500
 
-    result_path = RESULTS_DIR / f"{upload_id}.json"
-    result_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    logger.info("Result saved: %s", result_path)
-
-    payload["saved_result"] = str(result_path.relative_to(ROOT_DIR))
-    payload["uploaded_video"] = str(video_path.relative_to(ROOT_DIR))
+    payload = {
+        "video": str(video_path),
+        "domain": domain_name,
+        "model": model_alias,
+        "interval_sec": interval_sec,
+        "video_info": video_info,
+        "segments": results,
+        "saved_result": str(result_path.relative_to(ROOT_DIR)),
+        "uploaded_video": str(video_path.relative_to(ROOT_DIR)),
+    }
     return jsonify(payload)
-
-
