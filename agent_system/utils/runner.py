@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Callable
 
 from utils.custom_logger import GetLogger
-from utils.video import _build_segments
+from utils.utils import _split_timeline
 
 logger = GetLogger("main", None)  # 호출부에서 이미 등록된 인스턴스를 재사용
 
@@ -27,7 +27,7 @@ def run_segments(
     on_record: 레코드 완성 직후 호출할 콜백 (터미널 출력 등 표시 계층용).
     """
     video_info = video_capture.video_metadata
-    segments = _build_segments(video_info["duration_sec"], interval_sec)
+    segments = _split_timeline(video_info["duration_sec"], interval_sec)
 
     results = []
     total = len(segments)

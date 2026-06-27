@@ -13,7 +13,7 @@ def _resize_for_vision(frame, max_long_edge: int = MAX_FRAME_LONG_EDGE):
     return cv2.resize(frame, (int(width * scale), int(height * scale)), interpolation=cv2.INTER_AREA)
     
 
-def _build_segments(duration_sec: float | None, interval_sec: float) -> list[dict]:
+def _split_timeline(duration_sec: float | None, interval_sec: float) -> list[dict]:
     if duration_sec is None:
         return [{"start_sec": 0.0, "end_sec": None}]
 
