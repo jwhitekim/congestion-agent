@@ -5,9 +5,10 @@ from pathlib import Path
 
 import cv2
 
-from .base import BaseTool
-from .bytetrack_adapter import ByteTrackAdapter
-from .detection import YoloPredictor
+from utils.base import BaseTool
+from .models.tracker import ByteTrackAdapter
+from .models.detector import YoloPredictor
+from .models.result import build_track_result, build_segment_result
 
 
 class TrackPeopleTool(BaseTool):
@@ -98,8 +99,6 @@ class TrackPeopleTool(BaseTool):
 
                 if (frame_id - start_frame) % sample_every_n == 0:
                     timestamp = frame_id / fps if fps else None
-                    # 도구는 사람 클래스 탐지와 FoundationVision ByteTrack 추적까지만 수행한다.
-                    # 혼잡 판단은 절대 하지 않는다.
                     detections = self._get_predictor().predict(frame, classes=[0], conf=0.1)
                     tracked = tracker.update(detections, image_shape=frame.shape[:2])
                     frame_people = []
@@ -143,22 +142,16 @@ class TrackPeopleTool(BaseTool):
         finally:
             cap.release()
 
-        return {
-            "video_path": str(video_path),
-            "segment": {
-                "start_sec": float(start_sec) if start_sec is not None else 0.0,
-                "end_sec": float(end_sec) if end_sec is not None else (round(end_frame / fps, 3) if fps else None),
-                "start_frame": start_frame,
-                "end_frame": end_frame,
-            },
-            "frame_size": {"width": width, "height": height},
-            "sample_every_n": sample_every_n,
-            "sampled_frame_count": len(sampled_frames),
-            "sampled_frames": sampled_frames,
-            "people": sorted(tracks.values(), key=lambda item: item["track_id"]),
-            "zone_grid": {"rows": grid_rows, "cols": grid_cols},
-            "zone_counts": self._build_zone_counts(latest_positions, width, height, grid_rows, grid_cols),
-        }
+        return build_track_result(
+            video_path=video_path,
+            segment=build_segment_result(start_sec, end_sec, start_frame, end_frame, fps),
+            frame_size={"width": width, "height": height},
+            sample_every_n=sample_every_n,
+            sampled_frames=sampled_frames,
+            tracks=tracks,
+            zone_grid={"rows": grid_rows, "cols": grid_cols},
+            zone_counts=self._build_zone_counts(latest_positions, width, height, grid_rows, grid_cols),
+        )
 
     def _build_zone_counts(self, latest_positions, width: int, height: int, rows: int, cols: int) -> list[dict]:
         counts: defaultdict[tuple[int, int], int] = defaultdict(int)

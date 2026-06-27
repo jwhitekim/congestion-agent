@@ -1,4 +1,4 @@
-from tools import TrackPeopleTool
+from .tool import TrackPeopleTool
 
 
 SYSTEM_PROMPT = """너는 혼잡 상황을 판단하는 LLM(두뇌 역할)이다.
@@ -24,7 +24,7 @@ SYSTEM_PROMPT = """너는 혼잡 상황을 판단하는 LLM(두뇌 역할)이다
 - 아래 6개 필드만 출력하라. frame_timestamp·tool_called·tool_raw는 시스템이 자동으로 추가한다.
 {
   "total_people": <정수>,
-  "distribution_summary": "<어디에 몰렸는지 또는 고르게 퍼졌는지에 대한 한국어 설명>",
+  "distribution_summary": "<어디에 몰렸는지 또는 고르게 퍼져있는지에 대한 한국어 설명>",
   "congestion_level": "low" | "medium" | "high",
   "local_hotspots": ["<국소 혼잡 구역 설명>", "..."],
   "reasoning": "<장면 관찰과 도구 사실을 종합한 한국어 판단 근거>",
