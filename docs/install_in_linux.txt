@@ -1,0 +1,83 @@
+ssh -i ./.ssh/joon.pem ubuntu@50.16.92.195
+
+source ./venv/bin/activate && cd ./AnEmptySeat && python manage.py runserver 0.0.0.0:8000
+
+source ./venv/bin/activate && cd ./AnEmptySeat && gunicorn --bind 127.0.0.1:8000 backend.config.wsgi:application
+
+
+sudo systemctl restart nginx
+
+# PPA 추가에 필요한 기본 패키지 설치
+sudo apt install software-properties-common -y
+
+# deadsnakes PPA 저장소 추가
+sudo add-apt-repository ppa:deadsnakes/ppa
+
+# PPA가 추가되었으므로 패키지 목록을 다시 업데이트
+sudo apt update
+
+sudo apt install python3.10 python3.10-venv -y
+
+
+# apt 패키지 목록 업데이트
+sudo apt update
+
+# python3.12 및 python3.12용 venv 설치
+sudo apt install python3.10 python3.10-venv -y
+
+# 1. 프로젝트 폴더로 이동
+cd ~/AnEmptySeat
+
+# 2. python3.10을 사용하여 'venv'라는 이름의 가상 환경 생성
+python3.10 -m venv venv
+
+# 3. 가상 환경 활성화
+source venv/bin/activate
+
+pip install --upgrade pip setuptools wheel
+
+# 1단계: 기본 패키지
+pip install numpy
+pip install scipy
+pip install opencv-python
+pip install matplotlib
+pip install pillow
+pip install networkx
+pip install sympy
+
+# 2단계: PyTorch CPU 전용
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# 3단계: 기타 pip 패키지
+pip install ultralytics
+pip install filterpy
+pip install scikit-learn
+
+# lap과 pyqt 대체 설치
+pip install lapx
+pip install PyQt5
+
+# 나머지
+pip install chromedriver-autoinstaller
+pip install requests
+pip install selenium
+pip install selenium-stealth
+pip install django
+pip install python-decouple
+
+# ocsort는 종속성 설치 없이
+pip install ocsort --no-deps
+
+
+
+# 1. 서비스 파일을 시스템에 등록
+sudo systemctl daemon-reload
+
+# 2. Gunicorn 서비스 시작
+sudo systemctl start gunicorn
+
+# 3. 서버 부팅 시 자동으로 서비스가 시작되도록 활성화
+sudo systemctl enable gunicorn
+
+# 4. 서비스 상태 확인
+sudo systemctl status gunicorn

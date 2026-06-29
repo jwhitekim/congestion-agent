@@ -1,0 +1,15 @@
+# python cache
+**/__pycache__/
+
+# IDE Configuration
+.idea/
+.vscode/
+
+# Models and Meta Data files
+models/
+
+# Environment files
+*.env
+
+# Media files
+*.mp4
