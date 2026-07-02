@@ -11,14 +11,12 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-# 프로젝트 루트를 sys.path에 추가 (scripts/ 하위에서 실행할 때)
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+from agent.congestion.detector import Detector
+from agent.congestion.density import calc_spatial_density
+from agent.congestion.tracker import Tracker
+from agent import config
 
-from perception.detector import Detector
-from perception.density import calc_spatial_density
-from perception.tracker import Tracker
-import config
+ROOT = Path(__file__).resolve().parent.parent
 
 OUTPUT_FILE = ROOT / "calibration_thresholds.json"
 

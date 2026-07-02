@@ -1,6 +1,6 @@
 from typing import Optional
-import config
-from facts.types import PerceptionResult, AggregatedFacts
+from agent import config
+from agent.types import PerceptionResult, AggregatedFacts
 from .history import SegmentHistory
 
 
@@ -23,7 +23,6 @@ def evaluate(
     트리거 없으면 trigger_name=None, reason=None.
 
     순간값이 아닌 변화율·지속시간 기반 조건을 사용한다.
-    이 레이어는 agent/ 를 import하지 않는다.
     """
     avg_density = history.avg_density()
     density_delta_ratio = (

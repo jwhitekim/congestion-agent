@@ -7,7 +7,7 @@ from typing import Optional
 from rich.console import Console
 from rich.rule import Rule
 
-from facts.types import PerceptionResult
+from agent.types import PerceptionResult
 
 console = Console()
 

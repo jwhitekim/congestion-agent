@@ -1,7 +1,7 @@
 import os
 import torch
 from ultralytics import YOLO
-import config
+from agent import config
 
 
 class Detector:

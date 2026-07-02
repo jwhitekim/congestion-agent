@@ -9,10 +9,10 @@ LLM은 판단(assessment, reasoning, action)만 생산한다.
 import json
 import anthropic
 
-import config
-from facts.types import AggregatedFacts
-from . import prompt, schema
-from .tools import TOOLS, track_people
+from agent import config
+from agent.types import AggregatedFacts
+from .. import prompt, schema
+from ..tools import TOOLS, execute_tool
 
 _client = anthropic.Anthropic()
 
@@ -93,14 +93,7 @@ def run(facts: AggregatedFacts, trigger_name: str) -> dict:
 
                 tool_calls_log.append({"name": block.name, "input": block.input})
 
-                if block.name == "track_people":
-                    result = track_people(
-                        facts,
-                        zone=block.input.get("zone", "all"),
-                        metric=block.input.get("metric", "all"),
-                    )
-                else:
-                    result = {"error": f"Unknown tool: {block.name}"}
+                result = execute_tool(block.name, facts, **block.input)
 
                 tool_raw.append(result)
                 tool_results.append({

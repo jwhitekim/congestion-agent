@@ -1,37 +1,34 @@
 """
-에이전트 도구 정의.
 track_people: 특정 구역/지표의 사실을 텍스트/숫자로 반환. 이미지 없음.
 """
 
-from facts.types import AggregatedFacts
+from agent.types import AggregatedFacts
+from . import register_tool
 
-TOOLS = [
-    {
-        "name": "track_people",
-        "description": (
-            "특정 구역 또는 지표의 정밀한 사실(인원·밀도·속도)을 반환합니다. "
-            "텍스트/숫자 사실만 반환하며 이미지는 절대 반환하지 않습니다. "
-            "판단에 사실이 부족할 때만 호출하십시오."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "zone": {
-                    "type": "string",
-                    "description": "조회할 구역. A/B/C 중 하나 또는 'all'(전체).",
-                },
-                "metric": {
-                    "type": "string",
-                    "enum": ["count", "density", "speed", "all"],
-                    "description": "조회할 지표.",
-                },
+
+@register_tool(
+    name="track_people",
+    description=(
+        "특정 구역 또는 지표의 정밀한 사실(인원·밀도·속도)을 반환합니다. "
+        "텍스트/숫자 사실만 반환하며 이미지는 절대 반환하지 않습니다. "
+        "판단에 사실이 부족할 때만 호출하십시오."
+    ),
+    input_schema={
+        "type": "object",
+        "properties": {
+            "zone": {
+                "type": "string",
+                "description": "조회할 구역. A/B/C 중 하나 또는 'all'(전체).",
             },
-            "required": ["zone", "metric"],
+            "metric": {
+                "type": "string",
+                "enum": ["count", "density", "speed", "all"],
+                "description": "조회할 지표.",
+            },
         },
-    }
-]
-
-
+        "required": ["zone", "metric"],
+    },
+)
 def track_people(facts: AggregatedFacts, zone: str, metric: str) -> dict:
     """
     AggregatedFacts에서 요청된 구역/지표 사실을 추출해 반환.
