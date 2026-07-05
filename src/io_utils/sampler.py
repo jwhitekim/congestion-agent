@@ -1,7 +1,7 @@
 """
 영상 파일 → (timestamp, frame) 프레임 스트림.
 모든 프레임을 순서대로 내보낸다.
-perception/pipeline.py가 SEGMENT_INTERVAL 단위로 집계를 담당한다.
+perception.pipeline이 SEGMENT_INTERVAL 단위로 집계를 담당한다.
 """
 
 from typing import Generator, Tuple

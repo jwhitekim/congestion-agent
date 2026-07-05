@@ -1,6 +1,6 @@
 from collections import deque
-from agent import config
-from agent.types import PerceptionResult
+import config
+from datatypes import PerceptionResult
 
 
 class SegmentHistory:

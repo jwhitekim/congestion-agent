@@ -10,16 +10,14 @@
 
 import json
 import sys
-from dataclasses import asdict
 from pathlib import Path
 
-from agent import config
-from agent.io.sampler import get_video_fps, iter_frames
-from agent.io.reporter import report_segment
-from agent.congestion.pipeline import PerceptionPipeline
-from agent.core.history import SegmentHistory
-from agent.core import rules
-from agent.core import loop as agent_loop
+from io_utils.sampler import get_video_fps, iter_frames
+from io_utils.reporter import report_segment
+from perception.pipeline import PerceptionPipeline
+from trigger.history import SegmentHistory
+from trigger import rules
+from agent import loop as agent_loop
 
 RESULTS_FILE = Path("results.json")
 

@@ -2,8 +2,8 @@ from collections import defaultdict, deque
 from typing import Optional
 import numpy as np
 
-from agent import config
-from agent.types import PerceptionResult
+import config
+from datatypes import PerceptionResult
 from .detector import Detector
 from .tracker import Tracker
 from .density import calc_spatial_density, calc_avg_speed
@@ -16,7 +16,7 @@ class PerceptionPipeline:
     모든 프레임을 tracker에 먹여 track 연속성을 유지하되,
     SEGMENT_INTERVAL 초마다 한 번만 PerceptionResult를 방출한다.
 
-    의존 방향: congestion → types 만.
+    의존 방향: perception → types 만.
     """
 
     def __init__(self, fps: float = 30.0):

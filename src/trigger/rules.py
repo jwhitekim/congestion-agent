@@ -1,6 +1,6 @@
 from typing import Optional
-from agent import config
-from agent.types import PerceptionResult, AggregatedFacts
+import config
+from datatypes import PerceptionResult, AggregatedFacts
 from .history import SegmentHistory
 
 

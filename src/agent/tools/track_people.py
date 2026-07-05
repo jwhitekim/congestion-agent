@@ -2,7 +2,7 @@
 track_people: 특정 구역/지표의 사실을 텍스트/숫자로 반환. 이미지 없음.
 """
 
-from agent.types import AggregatedFacts
+from datatypes import AggregatedFacts
 from . import register_tool
 
 

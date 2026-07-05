@@ -9,10 +9,10 @@ LLM은 판단(assessment, reasoning, action)만 생산한다.
 import json
 import anthropic
 
-from agent import config
-from agent.types import AggregatedFacts
-from .. import prompt, schema
-from ..tools import TOOLS, execute_tool
+import config
+from datatypes import AggregatedFacts
+from . import prompt, schema
+from .tools import TOOLS, execute_tool
 
 _client = anthropic.Anthropic()
 
