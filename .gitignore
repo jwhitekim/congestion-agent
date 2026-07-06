@@ -14,3 +14,6 @@ models/
 
 # Media files
 *.mp4
+
+# Run outputs
+outputs/
