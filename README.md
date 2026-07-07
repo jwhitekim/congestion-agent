@@ -41,6 +41,8 @@ PYTHONPATH=src python src/main.py videos/supermarket.mp4
 
 세그먼트마다 터미널에 PERCEPTION / TRIGGER / AGENT 3줄이 출력되고, 실행마다 `outputs/<timestamp>/` 세션 폴더가 새로 생성된다. `session.json`에는 세션 메타데이터(시작/종료 시각, config snapshot)가 기록되고, 세그먼트별 결과는 `results.jsonl`에 한 줄씩 즉시 append된다 (트리거 안 걸린 세그먼트도 `agent: null`로 포함, tool_raw 등 연구용 원본 데이터 보존).
 
+결과 시각화 대시보드는 [`dashboard/`](./dashboard) 참고.
+
 ## 디렉토리 구조
 
 ```
