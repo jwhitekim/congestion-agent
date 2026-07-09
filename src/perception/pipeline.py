@@ -21,11 +21,10 @@ class PerceptionPipeline:
 
     def __init__(self, fps: float = 30.0):
         self.detector = Detector()
-        self.tracker = Tracker()
+        self.tracker = Tracker(frame_rate=fps)
         self.track_trails: dict[int, deque] = defaultdict(lambda: deque(maxlen=30))
 
         self._fps = fps
-        self._frame_id = 0
         self._segment_start: float = 0.0
         self._initialized = False  # 첫 프레임 타임스탬프로 segment_start 세팅
 
@@ -34,15 +33,13 @@ class PerceptionPipeline:
         프레임 하나를 처리한다.
         SEGMENT_INTERVAL이 지났으면 PerceptionResult를 반환, 아니면 None.
         """
-        self._frame_id += 1
-
         if not self._initialized:
             self._segment_start = timestamp
             self._initialized = True
 
         h, w = frame.shape[:2]
         detections = self.detector.detect(frame)
-        tracked = self.tracker.update(detections, self._frame_id)
+        tracked = self.tracker.update(detections)
 
         for obj in tracked:
             track_id = int(obj[4])
