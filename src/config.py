@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Model ---
 MODEL_DIR = "models"
@@ -27,3 +30,4 @@ DENSITY_HIGH = 35.0
 
 # --- Agent ---
 ANTHROPIC_MODEL = "claude-sonnet-4-6"
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")

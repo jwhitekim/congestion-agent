@@ -14,7 +14,7 @@ from datatypes import AggregatedFacts
 from . import prompt, schema
 from .tools import TOOLS, execute_tool
 
-_client = anthropic.Anthropic()
+_client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, timeout=30.0)
 
 
 def _facts_to_text(facts: AggregatedFacts) -> str:
