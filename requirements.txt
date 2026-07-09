@@ -1,3 +1,6 @@
+# CUDA 12.6 GPU 빌드 torch. 최신 드라이버(예: CUDA 13.0)도 하위 호환되므로 그대로 사용 가능.
+--extra-index-url https://download.pytorch.org/whl/cu126
+
 anthropic
 rich
 attrs==25.3.0
@@ -25,8 +28,8 @@ sortedcontainers==2.4.0
 supervision==0.29.1
 sympy==1.14.0
 tcmlib==1.4.0
-torch==2.8.0
-torchvision==0.23.0
+torch==2.8.0+cu126
+torchvision==0.23.0+cu126
 typing_extensions==4.14.1
 tzdata==2025.2
 ultralytics==8.3.195

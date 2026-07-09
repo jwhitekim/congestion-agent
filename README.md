@@ -9,7 +9,7 @@
 
 ```
 perception (항상 실행)  →  trigger (항상 실행)  →  agent (트리거 시에만 소환)
-YOLOv8m + OC-SORT           rule 기반 조건문           텍스트 전용 LLM 판정
+YOLOv8m + ByteTrack          rule 기반 조건문           텍스트 전용 LLM 판정
 + Line Density               (변화율·지속시간 기반)
 ```
 
@@ -26,7 +26,8 @@ YOLOv8m + OC-SORT           rule 기반 조건문           텍스트 전용 LLM
 pip install -r requirements.txt
 ```
 
-`requirements.txt`에 `torch`, `ultralytics`(YOLOv8), `ocsort`가 포함돼 있어 GPU 환경(CUDA)을 권장한다.
+`requirements.txt`는 CUDA 12.6 GPU 빌드 `torch`/`torchvision`을 설치한다 (최신 드라이버도 하위 호환되므로 CUDA 13.0 드라이버에서도 그대로 동작).
+`ultralytics`(YOLOv8), `supervision`(ByteTrack)이 포함돼 있어 GPU 환경(CUDA)을 권장한다.
 YOLO 모델 가중치는 `models/capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt` 경로에 위치해야 한다 (`config.MODEL_DIR`, `config.YOLO_MODEL_NAME`).
 
 `ANTHROPIC_API_KEY` 환경변수가 필요하다 (agent 판정에 `anthropic` SDK 사용, 모델: `claude-sonnet-4-6`).
