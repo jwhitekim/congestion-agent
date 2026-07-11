@@ -29,5 +29,10 @@ DENSITY_LOW  = 15.0
 DENSITY_HIGH = 35.0
 
 # --- Agent ---
+AGENT_PROVIDER = os.getenv("AGENT_PROVIDER", "anthropic")  # "anthropic" | "gemini"
+
 ANTHROPIC_MODEL = "claude-sonnet-4-6"
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+
+GEMINI_MODEL = "gemini-3.5-flash"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
