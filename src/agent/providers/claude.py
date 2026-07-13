@@ -2,8 +2,8 @@
 Anthropic Claude 프로바이더.
 tool_use 루프 골격은 providers/__init__.py의 run_tool_loop()가 담당한다.
 이 클래스는 다른 provider와 인터페이스를 상속하지 않는다 — init_state/send/
-extract_tool_calls/extract_text/append_tool_results/extract_usage 6개 메서드만 맞추면
-run_tool_loop()가 그대로 돌린다(duck typing).
+extract_tool_calls/extract_text/append_tool_results/extract_usage/is_retryable
+7개 메서드만 맞추면 run_tool_loop()가 그대로 돌린다(duck typing).
 """
 
 import json
@@ -49,6 +49,15 @@ class ClaudeProvider:
             "output_tokens": response.usage.output_tokens,
             "stop_reason": response.stop_reason,
         }
+
+    def is_retryable(self, exc: Exception) -> bool:
+        """API 레벨 실패(네트워크/타임아웃/rate limit/서버 오류)만 재시도 대상."""
+        return isinstance(exc, (
+            anthropic.APIConnectionError,   # 네트워크 오류 (APITimeoutError 포함)
+            anthropic.RateLimitError,       # 429
+            anthropic.InternalServerError,  # 5xx
+            anthropic.OverloadedError,      # 529 overloaded
+        ))
 
     def append_tool_results(self, state: list[dict], response, calls: list[dict], results: list[dict]) -> list[dict]:
         tool_results = [

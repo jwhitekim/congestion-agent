@@ -1,8 +1,8 @@
 """
 Google Gemini 프로바이더 (Interactions API, google-genai SDK).
 tool_use 루프 골격은 providers/__init__.py의 run_tool_loop()가 담당한다.
-이 클래스는 init_state/send/extract_tool_calls/extract_text/append_tool_results/extract_usage
-6개 메서드만 맞추면 되고 별도 인터페이스는 상속하지 않는다(duck typing).
+이 클래스는 init_state/send/extract_tool_calls/extract_text/append_tool_results/extract_usage/
+is_retryable 7개 메서드만 맞추면 되고 별도 인터페이스는 상속하지 않는다(duck typing).
 
 tool 스키마는 agent/tools/에서 Anthropic 형식(input_schema)으로 등록되므로,
 Gemini가 요구하는 {"type": "function", ..., "parameters": ...} 형식으로
@@ -11,7 +11,10 @@ Gemini가 요구하는 {"type": "function", ..., "parameters": ...} 형식으로
 
 import json
 
+import httpx
+import requests
 from google import genai
+from google.genai import errors as genai_errors
 
 import config
 
@@ -64,6 +67,14 @@ class GeminiProvider:
             "output_tokens": usage.total_output_tokens if usage else None,
             "stop_reason": response.status,
         }
+
+    def is_retryable(self, exc: Exception) -> bool:
+        """API 레벨 실패(네트워크/타임아웃/rate limit/서버 오류)만 재시도 대상."""
+        if isinstance(exc, genai_errors.ServerError):  # 5xx
+            return True
+        if isinstance(exc, genai_errors.ClientError):
+            return exc.code == 429  # rate limit
+        return isinstance(exc, (httpx.TransportError, requests.exceptions.ConnectionError, requests.exceptions.Timeout))
 
     def append_tool_results(self, state: dict, response, calls: list[dict], results: list[dict]) -> dict:
         function_results = [

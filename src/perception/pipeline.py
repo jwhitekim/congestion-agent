@@ -1,3 +1,4 @@
+import time
 from collections import defaultdict, deque
 from typing import Optional
 import numpy as np
@@ -27,6 +28,7 @@ class PerceptionPipeline:
 
         self._fps = fps
         self._segment_start: float = 0.0
+        self._segment_cv_elapsed: float = 0.0  # 이번 세그먼트 구간의 detect+track 누적 시간
         self._initialized = False  # 첫 프레임 타임스탬프로 segment_start 세팅
 
     def feed(self, timestamp: float, frame: np.ndarray) -> Optional[PerceptionResult]:
@@ -39,8 +41,10 @@ class PerceptionPipeline:
             self._initialized = True
 
         h, w = frame.shape[:2]
+        frame_start = time.perf_counter()
         detections = self.detector.detect(frame)
         tracked = self.tracker.update(detections)
+        self._segment_cv_elapsed += time.perf_counter() - frame_start
 
         for obj in tracked:
             track_id = int(obj[4])
@@ -49,13 +53,14 @@ class PerceptionPipeline:
             self.track_trails[track_id].append((cx, cy))
 
         if timestamp - self._segment_start >= config.SEGMENT_INTERVAL:
-            result = self._build_result(timestamp, tracked, w)
+            result = self._build_result(timestamp, tracked, w, self._segment_cv_elapsed)
             self._segment_start = timestamp
+            self._segment_cv_elapsed = 0.0
             return result
 
         return None
 
-    def _build_result(self, timestamp: float, tracked, frame_width: int) -> PerceptionResult:
+    def _build_result(self, timestamp: float, tracked, frame_width: int, cv_elapsed_sec: float) -> PerceptionResult:
         total = len(tracked)
         density = calc_spatial_density(tracked)
         avg_speed = calc_avg_speed(self.track_trails, self._fps)
@@ -79,6 +84,7 @@ class PerceptionPipeline:
             zone_density=zone_density,
             concentration=concentration,
             tracks=tracks,
+            cv_elapsed_sec=round(cv_elapsed_sec, 3),
         )
 
     def _zone_counts(self, tracked, frame_width: int) -> dict[str, int]:

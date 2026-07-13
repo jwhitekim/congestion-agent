@@ -55,6 +55,7 @@ class SessionFileManager:
                 "zone_counts": perception_result.zone_counts,
                 "zone_density": perception_result.zone_density,
                 "concentration": perception_result.concentration,
+                "cv_elapsed_sec": perception_result.cv_elapsed_sec,
                 "tracks": perception_result.tracks,
             },
             "trigger": trigger_name,

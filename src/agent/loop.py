@@ -9,6 +9,7 @@ LLM은 판단(assessment, reasoning, action)만 생산한다.
 import json
 import time
 
+import config
 from datatypes import AggregatedFacts
 from . import prompt, schema
 from .providers import get_provider
@@ -17,18 +18,44 @@ from .tools import TOOLS, execute_tool
 _provider = get_provider()
 
 
+def _send_with_retry(provider, system_prompt: str, state, tools: list[dict], log=None):
+    """
+    provider.send()를 실행하고, provider.is_retryable()이 참인 예외에 한해
+    지수 백오프로 재시도한다. LLM의 판단 자체를 재시도하는 것이 아니라
+    API 왕복이 네트워크/rate limit/서버 오류로 실패했을 때만 개입한다 —
+    reflection/self-correction과는 무관하다.
+    """
+    delay = config.AGENT_RETRY_BACKOFF_SEC
+    attempt = 0
+    while True:
+        try:
+            return provider.send(system_prompt, state, tools)
+        except Exception as exc:
+            if attempt >= config.AGENT_MAX_RETRIES or not provider.is_retryable(exc):
+                raise
+            attempt += 1
+            if log is not None:
+                log.warning(
+                    f"API 호출 실패 ({type(exc).__name__}: {exc}) — "
+                    f"재시도 {attempt}/{config.AGENT_MAX_RETRIES}, {delay:.1f}초 후"
+                )
+            time.sleep(delay)
+            delay *= 2
+
+
 def _run_tool_loop(
     provider,
     system_prompt: str,
     user_message: str,
     tools: list[dict],
     facts: AggregatedFacts,
+    log=None,
 ) -> tuple[str, list[dict], list[dict], list[dict]]:
     """
     tool_use 루프를 끝까지 실행하고 최종 텍스트를 반환한다.
     provider는 init_state/send/extract_tool_calls/extract_text/append_tool_results/
-    extract_usage 6개 메서드만 구현하면 된다(duck typing) — agent/providers/의 구체
-    클래스가 이를 만족한다.
+    extract_usage/is_retryable 7개 메서드만 구현하면 된다(duck typing) — agent/providers/의
+    구체 클래스가 이를 만족한다.
 
     반환: (final_text, tool_calls_log, tool_raw, api_call_log)
       - tool_calls_log: [{"name": ..., "input": ...}, ...]
@@ -43,7 +70,7 @@ def _run_tool_loop(
 
     while True:
         call_start = time.perf_counter()
-        response = provider.send(system_prompt, state, tools)
+        response = _send_with_retry(provider, system_prompt, state, tools, log=log)
         call_elapsed = time.perf_counter() - call_start
 
         usage = provider.extract_usage(response)
@@ -98,9 +125,13 @@ def _has_duplicate_tool_calls(tool_calls_log: list[dict]) -> bool:
     return False
 
 
-def run(facts: AggregatedFacts, trigger_name: str) -> dict:
+def run(facts: AggregatedFacts, trigger_name: str, log=None) -> dict:
     """
     트리거 발생 시 에이전트 루프를 실행한다.
+
+    log: main.py의 GetLogger 인스턴스(선택). API 재시도 발생 시 log.warning으로
+    기록한다 — 없으면 재시도는 조용히 진행된다(로깅만 생략, 재시도 자체는 동작).
+
     반환 dict:
       - LLM 판단 필드 (schema.py 참고)
       - total_people, density: 코드가 facts에서 주입 (LLM 생산 아님)
@@ -117,6 +148,7 @@ def run(facts: AggregatedFacts, trigger_name: str) -> dict:
         user_message=user_message,
         tools=TOOLS,
         facts=facts,
+        log=log,
     )
 
     try:

@@ -12,6 +12,7 @@ class PerceptionResult:
     zone_density: dict[str, float]  # 구역별 정규화 밀도 (근사치, perception/zone_metrics.py 참고)
     concentration: float        # 구역 간 분포 집중도 (Herfindahl-Hirschman 지수)
     tracks: list[dict]          # raw: track_id, center, bbox (연구용 보존)
+    cv_elapsed_sec: float        # 이 세그먼트 구간 동안 detect+track에 소요된 실제 시간 (초)
 
 
 @dataclass

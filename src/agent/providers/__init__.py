@@ -3,10 +3,13 @@ LLM 프로바이더 레지스트리.
 
 config.AGENT_PROVIDER 값("anthropic" | "gemini")에 따라 provider를 고른다.
 provider 클래스는 별도 인터페이스를 상속하지 않는다 — init_state/send/
-extract_tool_calls/extract_text/append_tool_results/extract_usage 6개 메서드만
-구현하면 agent/loop.py의 tool_use 루프가 그대로 돌린다(duck typing).
+extract_tool_calls/extract_text/append_tool_results/extract_usage/is_retryable
+7개 메서드만 구현하면 agent/loop.py의 tool_use 루프가 그대로 돌린다(duck typing).
+is_retryable(exc)은 send()가 던진 예외가 API 레벨 일시 오류(네트워크/rate
+limit/서버 오류)인지 판정한다 — loop.py는 이 판정에 따라서만 재시도하고,
+어떤 예외 클래스가 재시도 대상인지는 전혀 모른다.
 
-새 프로바이더를 추가하려면 이 패키지에 파일을 추가해 위 6개 메서드를 구현한
+새 프로바이더를 추가하려면 이 패키지에 파일을 추가해 위 7개 메서드를 구현한
 클래스를 만들고 아래 _PROVIDERS에 한 줄만 등록하면 된다. loop.py는 건드릴
 필요 없다.
 """
