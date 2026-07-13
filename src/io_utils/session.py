@@ -53,6 +53,8 @@ class SessionFileManager:
                 "density": perception_result.density,
                 "avg_speed": perception_result.avg_speed,
                 "zone_counts": perception_result.zone_counts,
+                "zone_density": perception_result.zone_density,
+                "concentration": perception_result.concentration,
                 "tracks": perception_result.tracks,
             },
             "trigger": trigger_name,
@@ -60,6 +62,7 @@ class SessionFileManager:
             "aggregated": {
                 "density_delta_ratio": agg_facts.density_delta_ratio,
                 "speed_trend": agg_facts.speed_trend,
+                "density_slope": agg_facts.density_slope,
                 "level": agg_facts.level,
             },
             "agent": agent_output,  # None이면 그대로 null로 저장

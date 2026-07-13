@@ -53,12 +53,12 @@ def main(video_path: str) -> None:
                 agent_output = agent_loop.run(agg_facts, trigger_name)
                 agent_elapsed = time.perf_counter() - agent_start
                 agent_output["agent_elapsed_sec"] = round(agent_elapsed, 3)
-                agent_output["api_round_trips"] = len(agent_output["tool_raw"]) + 1
+                agent_output["api_round_trips"] = len(agent_output["api_call_breakdown"])
             # trigger_name이 None이면 에이전트는 호출되지 않는다.
             # 이 분기가 설계의 핵심: 에이전트는 상시 감시자가 아니다.
 
             # ── 터미널 출력 (사람용) ────────────────────────────────────────
-            report_segment(perception_result, trigger_name, trigger_reason, agent_output)
+            report_segment(perception_result, trigger_name, trigger_reason, agg_facts.level, agent_output)
 
             # ── results.jsonl 누적 (분석용, tool_raw 포함 전체 보존) ─────────
             session.write_segment(perception_result, trigger_name, trigger_reason, agg_facts, agent_output)

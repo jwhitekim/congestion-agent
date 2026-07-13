@@ -18,8 +18,8 @@
   let seriesChart = null;
   let latencyChart = null;
 
-  const TRIGGER_LABELS = { surge: 'surge', stagnation: 'stagnation', hotspot: 'hotspot' };
-  const TRIGGER_COLORS = { surge: '#e5484d', stagnation: '#f5a623', hotspot: '#8e4ec6' };
+  const TRIGGER_LABELS = { surge: 'surge', stagnation: 'stagnation', hotspot: 'hotspot', conflict: 'conflict' };
+  const TRIGGER_COLORS = { surge: '#e5484d', stagnation: '#f5a623', hotspot: '#8e4ec6', conflict: '#3b9eff' };
 
   // ── 파생 통계 (카드 4개) ──
   let totalSegments = $derived(entries.length);
@@ -270,7 +270,7 @@
           <th>timestamp</th>
           <th>trigger</th>
           <th>assessment</th>
-          <th>congestion_level</th>
+          <th>level</th>
           <th>action</th>
           <th>agent_elapsed_sec</th>
           <th>api_round_trips</th>
@@ -282,7 +282,7 @@
             <td>{e.timestamp}</td>
             <td>{e.trigger ?? '-'}</td>
             <td>{e.agent?.assessment ?? '-'}</td>
-            <td>{e.agent?.congestion_level ?? '-'}</td>
+            <td>{e.agent?.congestion_level ?? e.aggregated?.level ?? '-'}</td>
             <td>{e.agent?.action ?? '-'}</td>
             <td>{e.agent?.agent_elapsed_sec ?? '-'}</td>
             <td>{e.agent?.api_round_trips ?? '-'}</td>

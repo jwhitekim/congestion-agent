@@ -16,6 +16,7 @@ def report_segment(
     result: PerceptionResult,
     trigger_name: Optional[str],
     trigger_reason: Optional[str],
+    level: str,
     agent_output: Optional[dict],
 ) -> None:
     ts = f"{int(result.timestamp // 60):02d}:{int(result.timestamp % 60):02d}"
@@ -31,14 +32,15 @@ def report_segment(
     )
     console.print(f"            zones: {zones}")
 
-    # TRIGGER
+    # TRIGGER — level은 trigger/rules.py가 매 세그먼트 계산하는 규칙 기반 값이라
+    # 트리거 발생 여부와 무관하게 항상 노출한다.
     if trigger_name:
         console.print(
             f" [bold yellow]TRIGGER    [/bold yellow]"
-            f" [yellow]{trigger_name}[/yellow] ({trigger_reason})"
+            f" [yellow]{trigger_name}[/yellow] ({trigger_reason})  level=[bold]{level}[/bold]"
         )
     else:
-        console.print(f" [bold green]TRIGGER    [/bold green] — (정상)")
+        console.print(f" [bold green]TRIGGER    [/bold green] — (정상)  level=[bold]{level}[/bold]")
 
     # AGENT — 트리거가 없을 때 'AGENT skip'이 명시적으로 보여야 한다
     if agent_output:
@@ -49,13 +51,13 @@ def report_segment(
         )
         if agent_output.get("tool_raw"):
             console.print("   [dim]├ tool    track_people(...)[/dim]")
-        assess   = agent_output.get("assessment", "?")
-        reasoning = (agent_output.get("reasoning") or "")[:80]
-        level    = agent_output.get("congestion_level", "?")
-        action   = agent_output.get("action", "?")
-        console.print(f'   [dim]├ assess  {assess} — "{reasoning}"[/dim]')
-        console.print(f"   [dim]├ level   {level}[/dim]")
-        console.print(f"   [dim]└ action  {action}[/dim]")
+        assess     = agent_output.get("assessment", "?")
+        reasoning  = (agent_output.get("reasoning") or "")[:80]
+        judgment   = agent_output.get("congestion_level", "?")
+        action     = agent_output.get("action", "?")
+        console.print(f'   [dim]├ assess   {assess} — "{reasoning}"[/dim]')
+        console.print(f"   [dim]├ judgment {judgment}[/dim]")
+        console.print(f"   [dim]└ action   {action}[/dim]")
     else:
         console.print(f" [bold dim]AGENT      [/bold dim] skip")
 

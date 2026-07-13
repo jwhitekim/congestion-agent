@@ -7,6 +7,7 @@ from datatypes import PerceptionResult
 from .detector import Detector
 from .tracker import Tracker
 from .density import calc_spatial_density, calc_avg_speed
+from .zone_metrics import calc_zone_density, calc_concentration
 
 
 class PerceptionPipeline:
@@ -59,6 +60,8 @@ class PerceptionPipeline:
         density = calc_spatial_density(tracked)
         avg_speed = calc_avg_speed(self.track_trails, self._fps)
         zone_counts = self._zone_counts(tracked, frame_width)
+        zone_density = calc_zone_density(zone_counts, config.ZONES)
+        concentration = calc_concentration(zone_counts)
         tracks = [
             {
                 "track_id": int(obj[4]),
@@ -73,6 +76,8 @@ class PerceptionPipeline:
             density=density,
             avg_speed=avg_speed,
             zone_counts=zone_counts,
+            zone_density=zone_density,
+            concentration=concentration,
             tracks=tracks,
         )
 

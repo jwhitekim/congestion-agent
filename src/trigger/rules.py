@@ -29,12 +29,14 @@ def evaluate(
         current.density / avg_density if avg_density > 0 else 1.0
     )
     trend = history.speed_trend_with(current.avg_speed)
+    density_slope = history.density_slope_with(current.density)
     level = _classify_level(current.density)
 
     facts = AggregatedFacts(
         current=current,
         density_delta_ratio=density_delta_ratio,
         speed_trend=trend,
+        density_slope=density_slope,
         level=level,
     )
 
@@ -69,5 +71,17 @@ def evaluate(
         if hotspot_count > config.ZONE_MAX:
             reason = f"hotspot: {hotspot_zone}구역 {hotspot_count}명 > 임계 {config.ZONE_MAX}"
             return "hotspot", reason, facts
+
+    # 4. Conflict: 순간값 기준 level은 "low"인데 추세(density_slope)는 가파르게
+    #    상승 중인 경계 사례. surge는 직전 평균 대비 비율이라 완만하지만 꾸준한
+    #    상승은 못 잡고, level은 순간 density만 보므로 추세를 모른다 — 두 규칙이
+    #    서로 다른 답을 내는 지점이라 규칙만으로는 판정을 내릴 수 없다.
+    #    이런 사례를 LLM에 넘겨 해석하게 하는 것이 이 트리거의 존재 이유다.
+    if level == "low" and density_slope > config.CONFLICT_SLOPE_MIN:
+        reason = (
+            f"conflict: level={level}이지만 density_slope={density_slope:.2f} "
+            f"> 임계 {config.CONFLICT_SLOPE_MIN} — 순간값과 추세 판정이 상충"
+        )
+        return "conflict", reason, facts
 
     return None, None, facts

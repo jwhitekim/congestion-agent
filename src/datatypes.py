@@ -9,6 +9,8 @@ class PerceptionResult:
     density: float              # Line Density 값
     avg_speed: float            # track 평균 이동 속도 (px/s)
     zone_counts: dict[str, int] # 구역별 인원
+    zone_density: dict[str, float]  # 구역별 정규화 밀도 (근사치, perception/zone_metrics.py 참고)
+    concentration: float        # 구역 간 분포 집중도 (Herfindahl-Hirschman 지수)
     tracks: list[dict]          # raw: track_id, center, bbox (연구용 보존)
 
 
@@ -18,4 +20,5 @@ class AggregatedFacts:
     current: PerceptionResult
     density_delta_ratio: float  # current.density / 직전 이동평균 (1.0 = 변화 없음)
     speed_trend: float          # 양수 = 가속, 음수 = 감속 (선형회귀 기울기)
+    density_slope: float        # 양수 = 밀도 증가 추세, 음수 = 감소 추세 (선형회귀 기울기)
     level: str                  # "low" | "medium" | "high"

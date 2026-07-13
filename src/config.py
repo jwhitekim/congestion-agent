@@ -23,6 +23,7 @@ SURGE_RATIO   = 1.4     # density > avg * this  →  surge trigger
 SPEED_MIN     = 0.5     # px/s; below this counts as stagnant
 STAG_SEC      = 10.0    # stagnation must persist this many seconds to trigger
 ZONE_MAX      = 8       # people in one zone > this  →  hotspot trigger
+CONFLICT_SLOPE_MIN = 0.4  # density_slope > this while level=="low"  →  conflict trigger
 
 # Congestion level thresholds (used by trigger/rules.py to set AggregatedFacts.level)
 DENSITY_LOW  = 15.0

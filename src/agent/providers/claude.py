@@ -2,7 +2,7 @@
 Anthropic Claude 프로바이더.
 tool_use 루프 골격은 providers/__init__.py의 run_tool_loop()가 담당한다.
 이 클래스는 다른 provider와 인터페이스를 상속하지 않는다 — init_state/send/
-extract_tool_calls/extract_text/append_tool_results 5개 메서드만 맞추면
+extract_tool_calls/extract_text/append_tool_results/extract_usage 6개 메서드만 맞추면
 run_tool_loop()가 그대로 돌린다(duck typing).
 """
 
@@ -42,6 +42,13 @@ class ClaudeProvider:
         if response.stop_reason != "end_turn":
             return ""  # 비정상 stop_reason
         return "".join(block.text for block in response.content if hasattr(block, "text"))
+
+    def extract_usage(self, response) -> dict:
+        return {
+            "input_tokens": response.usage.input_tokens,
+            "output_tokens": response.usage.output_tokens,
+            "stop_reason": response.stop_reason,
+        }
 
     def append_tool_results(self, state: list[dict], response, calls: list[dict], results: list[dict]) -> list[dict]:
         tool_results = [
