@@ -84,7 +84,22 @@ button.secondary {
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  padding: 40px 0;
+  padding: 40px;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.picker.dragging {
+  border-color: var(--accent);
+  background: var(--code-bg);
+}
+
+.hint {
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.6;
+  margin: -8px 0 0;
 }
 
 .error {

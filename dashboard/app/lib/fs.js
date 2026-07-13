@@ -9,6 +9,21 @@ export async function pickOutputsDirectory() {
   return await window.showDirectoryPicker();
 }
 
+// 드래그앤드롭된 DataTransfer에서 디렉토리 핸들을 얻는다.
+// getAsFileSystemHandle()은 File System Access API 확장이라 Chromium 계열만 지원한다
+// (isFileSystemAccessSupported와 동일한 지원 범위).
+export async function getDroppedDirectoryHandle(dataTransfer) {
+  const item = dataTransfer.items && dataTransfer.items[0];
+  if (!item || typeof item.getAsFileSystemHandle !== 'function') {
+    throw new Error('이 브라우저는 드래그앤드롭 폴더 선택을 지원하지 않습니다.');
+  }
+  const handle = await item.getAsFileSystemHandle();
+  if (handle.kind !== 'directory') {
+    throw new Error('폴더를 드롭해주세요 (파일은 지원하지 않습니다).');
+  }
+  return handle;
+}
+
 async function readJsonFile(dirHandle, filename) {
   const fileHandle = await dirHandle.getFileHandle(filename);
   const file = await fileHandle.getFile();
