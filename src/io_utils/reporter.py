@@ -44,13 +44,10 @@ def report_segment(
 
     # AGENT — 트리거가 없을 때 'AGENT skip'이 명시적으로 보여야 한다
     if agent_output:
-        tool_tag = "  [dim][tool called][/dim]" if agent_output.get("tool_called") else ""
         console.print(
             f" [bold magenta]AGENT      [/bold magenta]"
-            f" 호출됨 (트리거: {trigger_name}){tool_tag}"
+            f" 호출됨 (트리거: {trigger_name})"
         )
-        if agent_output.get("tool_raw"):
-            console.print("   [dim]├ tool    track_people(...)[/dim]")
         assess     = agent_output.get("assessment", "?")
         reasoning  = (agent_output.get("reasoning") or "")[:80]
         judgment   = agent_output.get("congestion_level", "?")
