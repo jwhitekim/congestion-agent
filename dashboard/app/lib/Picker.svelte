@@ -4,6 +4,7 @@
     pickOutputsDirectory,
     listSessions,
     isFileSystemAccessSupported,
+    isDragDropDirectorySupported,
     getDroppedDirectoryHandle,
   } from './fs.js';
 
@@ -11,6 +12,10 @@
   let loading = $state(false);
   let dragging = $state(false);
   const supported = isFileSystemAccessSupported();
+  // showDirectoryPicker와 별개 API라 따로 게이팅한다 — VS Code Simple Browser 같은
+  // Electron webview는 supported=true여도 이건 false일 수 있다. false면 드래그앤드롭
+  // UI 자체를 보여주지 않는다(버튼은 별개로 계속 동작).
+  const dragDropSupported = isDragDropDirectorySupported();
 
   async function loadHandle(handle) {
     error = '';
@@ -41,7 +46,7 @@
 
   function handleDragOver(e) {
     e.preventDefault();
-    if (supported) dragging = true;
+    dragging = true;
   }
 
   function handleDragLeave() {
@@ -51,7 +56,6 @@
   async function handleDrop(e) {
     e.preventDefault();
     dragging = false;
-    if (!supported) return;
     try {
       const handle = await getDroppedDirectoryHandle(e.dataTransfer);
       await loadHandle(handle);
@@ -63,16 +67,16 @@
 
 <div
   class="picker"
+  class:drop-zone={dragDropSupported}
   class:dragging
   role="region"
-  aria-label="outputs 폴더 드롭 영역"
-  ondragover={handleDragOver}
-  ondragleave={handleDragLeave}
-  ondrop={handleDrop}
+  aria-label={dragDropSupported ? 'outputs 폴더 드롭 영역' : undefined}
+  ondragover={dragDropSupported ? handleDragOver : undefined}
+  ondragleave={dragDropSupported ? handleDragLeave : undefined}
+  ondrop={dragDropSupported ? handleDrop : undefined}
 >
   <p>
-    congestion-agent 실행 결과가 담긴 <code>outputs/</code> 폴더를 선택하거나
-    이 영역에 드래그앤드롭하세요.
+    congestion-agent 실행 결과가 담긴 <code>outputs/</code> 폴더를 선택하세요{dragDropSupported ? ' (또는 이 영역에 드래그앤드롭)' : ''}.
   </p>
 
   {#if !supported}
@@ -84,7 +88,14 @@
     <button onclick={handlePick} disabled={loading}>
       {loading ? '불러오는 중...' : 'outputs 폴더 선택'}
     </button>
-    <p class="hint">또는 폴더를 이 영역에 끌어다 놓으세요</p>
+    {#if dragDropSupported}
+      <p class="hint">또는 폴더를 이 영역에 끌어다 놓으세요</p>
+    {:else}
+      <p class="hint">
+        이 브라우저(예: VS Code 내장 브라우저)는 드래그앤드롭을 지원하지 않을 수 있습니다 —
+        버튼을 사용해주세요.
+      </p>
+    {/if}
   {/if}
 
   {#if error}<p class="error">{error}</p>{/if}

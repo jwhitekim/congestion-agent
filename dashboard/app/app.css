@@ -85,12 +85,16 @@ button.secondary {
   align-items: flex-start;
   gap: 16px;
   padding: 40px;
-  border: 2px dashed var(--border);
   border-radius: 12px;
+}
+
+.picker.drop-zone {
+  padding: 40px;
+  border: 2px dashed var(--border);
   transition: border-color 0.15s, background 0.15s;
 }
 
-.picker.dragging {
+.picker.drop-zone.dragging {
   border-color: var(--accent);
   background: var(--code-bg);
 }
