@@ -73,5 +73,5 @@ def main(video_path: str) -> None:
 
 
 if __name__ == "__main__":
-    video = sys.argv[1] if len(sys.argv) > 1 else "videos/supermarket.mp4"
+    video = sys.argv[1] if len(sys.argv) > 1 else "videos/department_store.mp4"
     main(video)
