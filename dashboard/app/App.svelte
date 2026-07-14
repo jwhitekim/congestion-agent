@@ -1,15 +1,31 @@
 <script>
-  import { outputsHandle, selectedSession } from './lib/stores.js';
-  import Picker from './lib/Picker.svelte';
+  import { onMount } from 'svelte';
+  import { sessions, selectedSession } from './lib/stores.js';
+  import { fetchSessions } from './lib/api.js';
   import SessionList from './lib/SessionList.svelte';
   import SessionDetail from './lib/SessionDetail.svelte';
+
+  let loading = $state(true);
+  let error = $state('');
+
+  onMount(async () => {
+    try {
+      sessions.set(await fetchSessions());
+    } catch (e) {
+      error = `세션 목록을 불러오는 중 오류가 발생했습니다: ${e.message}`;
+    } finally {
+      loading = false;
+    }
+  });
 </script>
 
 <main>
   <h1>혼잡도 에이전트 대시보드</h1>
 
-  {#if $outputsHandle === null}
-    <Picker />
+  {#if loading}
+    <p>불러오는 중...</p>
+  {:else if error}
+    <p class="error">{error}</p>
   {:else if $selectedSession === null}
     <SessionList />
   {:else}

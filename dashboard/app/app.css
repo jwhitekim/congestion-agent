@@ -79,39 +79,8 @@ button.secondary {
   border-color: var(--border);
 }
 
-.picker {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 40px;
-  border-radius: 12px;
-}
-
-.picker.drop-zone {
-  padding: 40px;
-  border: 2px dashed var(--border);
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.picker.drop-zone.dragging {
-  border-color: var(--accent);
-  background: var(--code-bg);
-}
-
-.hint {
-  font-size: 14px;
-  color: var(--text);
-  opacity: 0.6;
-  margin: -8px 0 0;
-}
-
 .error {
   color: var(--danger);
-}
-
-.warn {
-  color: #b45309;
 }
 
 .toolbar {

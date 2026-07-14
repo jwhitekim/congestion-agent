@@ -1,13 +1,13 @@
 <script>
-  import { outputsHandle, sessions, selectedSession } from './stores.js';
-  import { listSessions } from './fs.js';
+  import { sessions, selectedSession } from './stores.js';
+  import { fetchSessions } from './api.js';
 
   let refreshing = $state(false);
 
   async function refresh() {
     refreshing = true;
     try {
-      sessions.set(await listSessions($outputsHandle));
+      sessions.set(await fetchSessions());
     } finally {
       refreshing = false;
     }
@@ -16,22 +16,16 @@
   function selectSession(s) {
     selectedSession.set(s);
   }
-
-  function chooseAnotherFolder() {
-    outputsHandle.set(null);
-    sessions.set([]);
-  }
 </script>
 
 <div class="toolbar">
   <button onclick={refresh} disabled={refreshing}>
     {refreshing ? '새로고침 중...' : '새로고침'}
   </button>
-  <button class="secondary" onclick={chooseAnotherFolder}>다른 폴더 선택</button>
 </div>
 
 {#if $sessions.length === 0}
-  <p>선택한 폴더에 세션이 없습니다.</p>
+  <p>outputs/ 폴더에 세션이 없습니다.</p>
 {:else}
   <div class="session-list">
     {#each $sessions as s (s.session_id)}

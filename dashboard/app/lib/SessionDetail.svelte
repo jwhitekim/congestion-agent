@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { Chart } from 'chart.js/auto';
   import { selectedSession } from './stores.js';
-  import { readSessionMeta, readResultsEntries, getResultsLastModified } from './fs.js';
+  import { fetchSessionMeta, fetchResultsEntries } from './api.js';
 
   let { session } = $props();
 
@@ -48,9 +48,9 @@
 
   async function loadAll() {
     try {
-      meta = await readSessionMeta(session.dirHandle);
-      entries = await readResultsEntries(session.dirHandle);
-      lastModified = await getResultsLastModified(session.dirHandle);
+      meta = await fetchSessionMeta(session.session_id);
+      entries = await fetchResultsEntries(session.session_id);
+      lastModified = meta.results_mtime_ms;
       loadError = '';
       renderCharts();
       if (!meta.ended_at) startPolling();
@@ -61,11 +61,10 @@
 
   async function pollTick() {
     try {
-      const freshMeta = await readSessionMeta(session.dirHandle);
-      const current = await getResultsLastModified(session.dirHandle);
-      if (current !== lastModified) {
-        lastModified = current;
-        entries = await readResultsEntries(session.dirHandle);
+      const freshMeta = await fetchSessionMeta(session.session_id);
+      if (freshMeta.results_mtime_ms !== lastModified) {
+        lastModified = freshMeta.results_mtime_ms;
+        entries = await fetchResultsEntries(session.session_id);
         renderCharts();
       }
       meta = freshMeta;
