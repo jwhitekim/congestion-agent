@@ -26,25 +26,34 @@ YOLOv8m + ByteTrack          rule 기반 조건문           텍스트 전용 LL
 
 ```bash
 pip install -r requirements.txt
+make install   # dashboard/ npm 의존성 설치
 ```
 
-`requirements.txt`는 CUDA 12.6 GPU 빌드 `torch`/`torchvision`을 설치한다(최신 드라이버도 하위 호환되므로 CUDA 13.0에서도 그대로 동작). `ultralytics`(YOLOv8), `supervision`(ByteTrack)이 포함돼 있어 GPU 환경(CUDA)을 권장한다. YOLO 모델 가중치는 `models/capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt` 경로에 위치해야 한다(`config.MODEL_DIR`, `config.YOLO_MODEL_NAME`).
+`requirements.txt`는 CUDA 12.6 GPU 빌드 `torch`/`torchvision`을 설치한다(최신 드라이버도 하위 호환되므로 CUDA 13.0에서도 그대로 동작). `ultralytics`(YOLOv8), `supervision`(ByteTrack)이 포함돼 있어 GPU 환경(CUDA)을 권장한다. YOLO 모델 가중치는 `models/capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt` 경로에 위치해야 한다(`config.MODEL_DIR`, `config.YOLO_MODEL_NAME`). `make install`은 `npm --prefix dashboard install`만 실행하고 Python 의존성 설치는 안내만 한다 — GPU 빌드 선택이 걸린 설치라 자동 실행하지 않는다.
 
-LLM 판정에는 `ANTHROPIC_API_KEY` 환경변수가 필요하다(`anthropic` SDK, 모델: `claude-sonnet-4-6`). 실험적으로 Gemini도 지원한다 — `AGENT_PROVIDER=gemini`로 설정하면 `google-genai` SDK로 `gemini-3.5-flash`(`GEMINI_API_KEY` 필요)를 대신 호출한다. 두 프로바이더 모두 `agent/providers/`의 duck-typing 인터페이스(`init_state/send/extract_text/extract_usage/is_retryable`)만 구현하면 되므로, 새 프로바이더를 추가해도 `agent/loop.py`는 건드릴 필요가 없다.
+LLM 판정에는 `ANTHROPIC_API_KEY` 환경변수가 필요하다(`anthropic` SDK, 기본 모델: `claude-sonnet-4-6`, `ANTHROPIC_MODEL`로 override 가능). 실험적으로 Gemini도 지원한다 — `AGENT_PROVIDER=gemini`로 설정하면 `google-genai` SDK로 기본 `gemini-3.5-flash`(`GEMINI_MODEL`로 override 가능, `GEMINI_API_KEY` 필요)를 대신 호출한다. 두 프로바이더 모두 `agent/providers/`의 duck-typing 인터페이스(`init_state/send/extract_text/extract_usage/is_retryable`)만 구현하면 되므로, 새 프로바이더를 추가해도 `agent/loop.py`는 건드릴 필요가 없다.
 
 API 호출은 네트워크/rate limit/서버 오류에 한해 지수 백오프로 자동 재시도한다(`config.AGENT_MAX_RETRIES`, 기본 3회). LLM 판단 자체의 재시도(self-correction)와는 무관하다.
 
 ## 실행
 
-패키지 설치 없이 `src/`를 `PYTHONPATH`에 직접 넣어 실행한다.
-
 ```bash
-PYTHONPATH=src python src/main.py videos/supermarket.mp4
+make run                                  # videos/department_store.mp4 (기본값)
+make run VIDEO=videos/supermarket.mp4     # 다른 영상 지정
 ```
+
+`make run`은 `PYTHONPATH=src python src/main.py $(VIDEO)`를 실행한다 — 패키지 설치 없이 `src/`를 `PYTHONPATH`에 직접 넣는 구조라 `make` 없이도 그 명령을 직접 쳐도 동일하다.
 
 실행마다 `outputs/<timestamp>/` 세션 폴더가 새로 생성된다. `session.json`은 세션 메타데이터(시작/종료 시각, config snapshot)를, `results.jsonl`은 세그먼트별 결과를 한 줄씩 즉시 기록한다 — 트리거 안 걸린 세그먼트도 `agent: null`로 포함하고, 트리거가 걸렸다면 어떤 근거로 걸렸는지(`trigger_reason`, 예: `"density 22.9 > avg × 1.4, ratio=1.60"`)도 함께 남긴다. 단, `trigger_reason`은 로그·결과 파일에만 기록될 뿐 LLM 프롬프트에는 아직 주입하지 않는다 — 주입 시 판단 품질이 개선되는지는 검증 전이다. `tool_raw` 등 연구용 원본 데이터도 보존한다.
 
-결과 시각화 대시보드는 [`dashboard/`](./dashboard) 참고. 브라우저에서 `outputs/` 폴더를 직접 선택해 읽고(File System Access API, 백엔드 없음), 세션이 아직 실행 중이면 1초 간격으로 자동 갱신한다.
+결과 시각화 대시보드는 [`dashboard/`](./dashboard) 참고.
+
+```bash
+make dash         # 개발 서버 (npm --prefix dashboard run dev)
+make dash-build   # 정적 빌드 (npm --prefix dashboard run build)
+```
+
+대시보드는 폴더 선택/드래그앤드롭이 없다 — Vite dev 서버의 미들웨어(`vite.config.js`)가 고정 루트 `outputs/`(`io_utils/session.py`의 `OUTPUTS_DIR`)를 직접 읽어 `/api/sessions*`로 내려주고, 브라우저는 그걸 fetch만 한다. 브라우저 파일시스템 권한이 필요 없어 VS Code Simple Browser 같은 제한적 webview에서도 동일하게 동작한다. 세션이 아직 실행 중이면 1초 간격으로 자동 갱신한다. **`make dash-build`로 만든 정적 빌드에는 이 API가 없다** — `configureServer`는 dev 서버 전용이라 `vite preview`나 정적 배포에서는 세션 목록이 뜨지 않는다.
 
 ## 디렉토리 구조
 
