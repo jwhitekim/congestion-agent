@@ -34,8 +34,8 @@ AGENT_PROVIDER = os.getenv("AGENT_PROVIDER", "anthropic")  # "anthropic" | "gemi
 AGENT_MAX_RETRIES = 3        # API 레벨 실패(네트워크/rate limit/서버 오류) 재시도 횟수
 AGENT_RETRY_BACKOFF_SEC = 1.0  # 첫 재시도 대기 시간(초). 매 재시도마다 2배 증가
 
-ANTHROPIC_MODEL = "claude-sonnet-4-6"
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
-GEMINI_MODEL = "gemini-3.5-flash"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
