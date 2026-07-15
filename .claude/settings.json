@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(make run)",
+      "Bash(make run VIDEO=*)",
+      "Bash(make dash)",
+      "Bash(make dash-build)",
+      "Bash(make install)",
+      "Bash(python -m pytest*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)"
+    ],
+    "deny": [
+      "Read(**/*.env)",
+      "Read(**/models/**)",
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)"
+    ],
+    "defaultMode": "acceptEdits"
+  }
+}
