@@ -5,7 +5,8 @@ load_dotenv()
 
 # --- Model ---
 MODEL_DIR = "models"
-YOLO_MODEL_NAME = "capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt"
+YOLO_BASE_MODEL_NAME = "yolov8s.pt"
+YOLO_FINE_TUNED_MODEL_NAME = "capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt" 
 
 # --- Pipeline ---
 SEGMENT_INTERVAL = 5.0  # seconds between PerceptionResult emissions

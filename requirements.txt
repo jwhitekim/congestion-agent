@@ -26,6 +26,7 @@ PyYAML==6.0.2
 requests==2.32.5
 sniffio==1.3.1
 sortedcontainers==2.4.0
+# ocsort==0.0.2
 supervision==0.29.1
 sympy==1.14.0
 tcmlib==1.4.0
@@ -37,3 +38,7 @@ ultralytics==8.3.195
 ultralytics-thop==2.0.17
 umf==0.11.0
 urllib3==2.5.0
+
+lapx --break-system-packages
+ocsort==0.0.2 --break-system-packages --no-deps
+filterpy==1.4.5 --break-system-packages
