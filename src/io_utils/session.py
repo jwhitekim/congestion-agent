@@ -45,7 +45,7 @@ class SessionFileManager:
     def _write_session(self) -> None:
         self.session_file.write_text(json.dumps(self._session, ensure_ascii=False, indent=2))
 
-    def write_segment(self, perception_result, trigger_name, trigger_reason, agg_facts, agent_output) -> None:
+    def write_segment(self, perception_result, trigger_name, trigger_reason, agg_facts, agent_output, co_triggered=None) -> None:
         entry = {
             "timestamp": perception_result.timestamp,
             "perception": {
@@ -60,6 +60,7 @@ class SessionFileManager:
             },
             "trigger": trigger_name,
             "trigger_reason": trigger_reason,
+            "co_triggered": co_triggered or [],
             "aggregated": {
                 "density_delta_ratio": agg_facts.density_delta_ratio,
                 "speed_trend": agg_facts.speed_trend,

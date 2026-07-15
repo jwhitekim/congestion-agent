@@ -39,7 +39,7 @@ def main(video_path: str) -> None:
                 continue  # 아직 세그먼트 인터벌 미달
 
             # ── 2단계: Trigger (항상 실행) ─────────────────────────────────
-            trigger_name, trigger_reason, agg_facts = rules.evaluate(perception_result, history)
+            trigger_name, trigger_reason, agg_facts, co_triggered = rules.evaluate(perception_result, history)
             log.info(
                 f"segment t={perception_result.timestamp:.1f}s "
                 f"total={perception_result.total} density={perception_result.density:.2f} "
@@ -61,7 +61,7 @@ def main(video_path: str) -> None:
             report_segment(perception_result, trigger_name, trigger_reason, agg_facts.level, agent_output)
 
             # ── results.jsonl 누적 (분석용, tool_raw 포함 전체 보존) ─────────
-            session.write_segment(perception_result, trigger_name, trigger_reason, agg_facts, agent_output)
+            session.write_segment(perception_result, trigger_name, trigger_reason, agg_facts, agent_output, co_triggered)
     except Exception:
         log.exception("파이프라인 실행 중 예외 발생")
         raise
