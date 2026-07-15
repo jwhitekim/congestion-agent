@@ -20,7 +20,7 @@ YOLOv8m + ByteTrack          rule 기반 조건문           텍스트 전용 LL
 
 > 과거엔 "tools = facts, LLM = judgment"를 슬로건으로 썼다. 지금은 `agent/tools/`가 비어있고 관측값을 실제로 만드는 주체가 perception이라, 대표 슬로건을 `perception = observations, LLM = judgment`로 바꿨다. 설계 철학과 향후 tool 복원 시 확장 방향은 AGENTS.md 3절 참고.
 
-> "에이전트"는 리포 명칭(`congestion-agent`)에서 온 내부 통칭이다. NCISS 논문에서는 이 시스템을 자율 에이전트가 아니라 **workflow**로 분류한다(Anthropic 2024 taxonomy 기준 — 코드가 trigger·정보 흐름·실행 경로를 통제하고, LLM은 트리거 시에만 판단을 생산하는 국소적 추론 단계). 정확한 명칭("반자동 워크플로우" 등)은 아래 "현재 상태" 참고 — 아직 미확정이다. 리포 내부 통칭과 논문의 시스템 분류는 다른 층위이므로 섞어 쓰지 말 것.
+> "에이전트"는 리포 명칭(`congestion-agent`)에서 온 내부 통칭이다. NCISS 논문에서는 이 시스템을 자율 에이전트가 아니라 **workflow**로 분류한다(Anthropic 2024 taxonomy 기준 — 코드가 trigger·정보 흐름·실행 경로를 통제하고, LLM은 트리거 시에만 판단을 생산하는 국소적 추론 단계). 정확한 명칭은 **"이벤트 트리거형 에이전틱 워크플로우"(event-triggered agentic workflow)**로 확정했다(2026-07-15). 리포 내부 통칭과 논문의 시스템 분류는 다른 층위이므로 섞어 쓰지 말 것.
 
 ## 설치
 
@@ -116,4 +116,3 @@ surge/stagnation은 변화율 또는 지속시간 기준이다. conflict는 "규
 - **hotspot 순간값 문제, 트리거 우선순위/반복 호출 계약 부재** — 상세는 위 "트리거 조건" 절 참고. 둘 다 결정만 남았다.
 - **Gemini 프로바이더는 실험적 상태다.** Sonnet/Haiku 레이턴시 비교 목적으로 추가했고, 정식 지원 대상인지는 미결정.
 - **`reasoning` 필드의 숫자 hallucination은 스키마 방어 범위 밖이다.** `schema.py`가 `total_people` 같은 구조화 필드는 걸러내지만, LLM이 자유 텍스트 `reasoning`에 "약 30명이…" 같은 틀린 숫자를 재서술하는 것은 막지 못한다. 알려진 한계로 남겨둔 상태다.
-- **"반자동 워크플로우" 명칭 재검토 필요.** workflow 분류 방향은 유지하되, "반자동"이 사람 개입을 뜻하는 것으로 오독될 수 있다는 지적이 있어 "코드 오케스트레이션 기반 이벤트 트리거형 워크플로우" 등 대안을 검토 중이다. 논문 제출 전 결정 필요.
