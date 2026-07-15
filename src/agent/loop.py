@@ -110,9 +110,15 @@ def _compute_local_hotspots(facts: AggregatedFacts) -> list[str]:
     ]
 
 
-def run(facts: AggregatedFacts, trigger_name: str, log=None) -> dict:
+def run(facts: AggregatedFacts, trigger_name: str, trigger_reason: str, log=None) -> dict:
     """
     트리거 발생 시 에이전트를 1회 호출해 판정한다 (single-shot, tool 없음).
+
+    trigger_reason: trigger/rules.py가 산출한 정량적 트리거 근거 문자열
+    (예: "density 22.9 > avg × 1.4, ratio=1.60"). 이미 문자열이라 숫자
+    hallucination 방어(_FORBIDDEN_NUMERIC)와는 무관하고, trigger가 이미 계산한
+    사실을 그대로 전달하는 것이므로 perception=observations/LLM=judgment
+    경계도 깨지 않는다.
 
     log: main.py의 GetLogger 인스턴스(선택). API 재시도 발생 시 log.warning으로
     기록한다 — 없으면 재시도는 조용히 진행된다(로깅만 생략, 재시도 자체는 동작).
@@ -126,7 +132,7 @@ def run(facts: AggregatedFacts, trigger_name: str, log=None) -> dict:
       - api_call_breakdown: list[dict]  (연구용, API 왕복별 시간/토큰/stop_reason.
         single-shot이므로 원소는 항상 1개)
     """
-    user_message = f"트리거 발생: {trigger_name}\n\n{_facts_to_text(facts)}\n위 사실을 바탕으로 상황을 판정하십시오."
+    user_message = f"트리거 발생: {trigger_name} ({trigger_reason})\n\n{_facts_to_text(facts)}\n위 사실을 바탕으로 상황을 판정하십시오."
 
     state = _provider.init_state(user_message)
 
