@@ -1,4 +1,5 @@
 from collections import deque
+import numpy as np
 import config
 from datatypes import PerceptionResult
 
@@ -94,3 +95,40 @@ class SegmentHistory:
         num = sum((i - x_mean) * (d - y_mean) for i, d in enumerate(densities))
         den = sum((i - x_mean) ** 2 for i in range(n))
         return num / den if den else 0.0
+
+
+class ThresholdHistory:
+    """
+    density/zone_max percentile 계산 전용 긴 히스토리.
+
+    SegmentHistory(HISTORY_WINDOW=30초=7세그먼트짜리 짧은 링버퍼, surge의 직전 평균
+    비율과 density_slope 전용)와는 목적이 다르다 — percentile은 표본 7개로는 너무
+    불안정해서 별도로 분리했다.
+
+    무한 누적 대신 최근 PERCENTILE_HISTORY_MAXLEN(기본 100세그먼트 ≈ 8.3분) 창으로
+    제한한다. 세션 전체를 무한 누적하면 (1) 긴 세션에서 메모리가 계속 늘고,
+    (2) 영상 초반과 후반의 혼잡 패턴이 다를 때 과거 값이 계속 쌓여 최근 상황
+    변화에 임계값이 둔감해진다 — 두 이유 다 최근 window로 제한하는 쪽이 낫다고
+    판단했다.
+    """
+
+    def __init__(self, maxlen: int = config.PERCENTILE_HISTORY_MAXLEN):
+        self._density: deque[float] = deque(maxlen=maxlen)
+        self._zone_max: deque[int] = deque(maxlen=maxlen)
+
+    def add(self, density: float, zone_counts: dict[str, int]) -> None:
+        self._density.append(density)
+        self._zone_max.append(max(zone_counts.values()) if zone_counts else 0)
+
+    def __len__(self) -> int:
+        return len(self._density)
+
+    def density_percentile(self, p: float) -> float:
+        if not self._density:
+            return 0.0
+        return float(np.percentile(self._density, p))
+
+    def zone_max_percentile(self, p: float) -> float:
+        if not self._zone_max:
+            return 0.0
+        return float(np.percentile(self._zone_max, p))

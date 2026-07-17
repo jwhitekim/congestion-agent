@@ -19,6 +19,11 @@ def _config_snapshot() -> dict:
         "STAG_SEC": config.STAG_SEC,
         "ZONE_MAX": config.ZONE_MAX,
         "SEGMENT_INTERVAL": config.SEGMENT_INTERVAL,
+        "PERCENTILE_HISTORY_MAXLEN": config.PERCENTILE_HISTORY_MAXLEN,
+        "MIN_SAMPLES_FOR_PERCENTILE": config.MIN_SAMPLES_FOR_PERCENTILE,
+        "DENSITY_LOW_PERCENTILE": config.DENSITY_LOW_PERCENTILE,
+        "DENSITY_HIGH_PERCENTILE": config.DENSITY_HIGH_PERCENTILE,
+        "ZONE_MAX_PERCENTILE": config.ZONE_MAX_PERCENTILE,
     }
 
 
@@ -45,7 +50,10 @@ class SessionFileManager:
     def _write_session(self) -> None:
         self.session_file.write_text(json.dumps(self._session, ensure_ascii=False, indent=2))
 
-    def write_segment(self, perception_result, trigger_name, trigger_reason, agg_facts, agent_output, co_triggered=None) -> None:
+    def write_segment(
+        self, perception_result, trigger_name, trigger_reason, agg_facts, agent_output,
+        co_triggered=None, thresholds=None,
+    ) -> None:
         entry = {
             "timestamp": perception_result.timestamp,
             "perception": {
@@ -67,6 +75,10 @@ class SessionFileManager:
                 "density_slope": agg_facts.density_slope,
                 "level": agg_facts.level,
             },
+            # 이 세그먼트 판정에 실제로 쓰인 density_low/high, zone_max와 그 출처
+            # (fallback|percentile) — trigger/rules.py의 _dynamic_thresholds() 참고.
+            # 언제부터 percentile로 전환됐는지 나중에 여기서 확인한다.
+            "dynamic_thresholds": thresholds,
             "agent": agent_output,  # None이면 그대로 null로 저장
         }
         self._results_fh.write(json.dumps(entry, ensure_ascii=False) + "\n")

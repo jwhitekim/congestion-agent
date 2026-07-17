@@ -15,7 +15,7 @@ from io_utils.sampler import get_video_fps, iter_frames
 from io_utils.reporter import report_segment
 from io_utils.session import SessionFileManager
 from perception.pipeline import PerceptionPipeline
-from trigger.history import SegmentHistory
+from trigger.history import SegmentHistory, ThresholdHistory
 from trigger import rules
 from agent import loop as agent_loop
 from logger import GetLogger
@@ -30,6 +30,7 @@ def main(video_path: str) -> None:
         fps = get_video_fps(video_path)
         pipeline = PerceptionPipeline(fps=fps)
         history = SegmentHistory()
+        threshold_history = ThresholdHistory()
 
         for timestamp, frame in iter_frames(video_path):
 
@@ -39,11 +40,13 @@ def main(video_path: str) -> None:
                 continue  # 아직 세그먼트 인터벌 미달
 
             # ── 2단계: Trigger (항상 실행) ─────────────────────────────────
-            trigger_name, trigger_reason, agg_facts, co_triggered = rules.evaluate(perception_result, history)
+            trigger_name, trigger_reason, agg_facts, co_triggered, thresholds = rules.evaluate(
+                perception_result, history, threshold_history
+            )
             log.info(
                 f"segment t={perception_result.timestamp:.1f}s "
                 f"total={perception_result.total} density={perception_result.density:.2f} "
-                f"trigger={trigger_name or '-'}"
+                f"trigger={trigger_name or '-'} thresholds={thresholds['source']}"
             )
 
             # ── 3단계: Agent (트리거 시에만 소환) ──────────────────────────
@@ -61,7 +64,9 @@ def main(video_path: str) -> None:
             report_segment(perception_result, trigger_name, trigger_reason, agg_facts.level, agent_output)
 
             # ── results.jsonl 누적 (분석용, tool_raw 포함 전체 보존) ─────────
-            session.write_segment(perception_result, trigger_name, trigger_reason, agg_facts, agent_output, co_triggered)
+            session.write_segment(
+                perception_result, trigger_name, trigger_reason, agg_facts, agent_output, co_triggered, thresholds
+            )
     except Exception:
         log.exception("파이프라인 실행 중 예외 발생")
         raise

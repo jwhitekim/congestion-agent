@@ -33,9 +33,21 @@ STAG_SEC      = 10.0    # stagnation must persist this many seconds to trigger
 ZONE_MAX      = 8       # people in one zone > this  →  hotspot trigger
 CONFLICT_SLOPE_MIN = 0.4  # density_slope > this while level=="low"  →  conflict trigger
 
-# Congestion level thresholds (used by trigger/rules.py to set AggregatedFacts.level)
+# Congestion level thresholds (used by trigger/rules.py to set AggregatedFacts.level).
+# 콜드스타트 fallback 값이기도 하다 — 아래 percentile 히스토리 표본이
+# MIN_SAMPLES_FOR_PERCENTILE 미만일 때 이 고정값을 그대로 쓴다.
 DENSITY_LOW  = 15.0
 DENSITY_HIGH = 35.0
+
+# --- Dynamic threshold (percentile 기반, 콜드스타트 fallback 포함) ---
+# 디텍터가 head→전신으로 바뀌면서 density 스케일이 달라져(약 0~140 → 0~350대)
+# 고정 임계값(DENSITY_LOW/HIGH, ZONE_MAX)이 과다발동을 일으킨 문제를 percentile
+# 기반 동적 임계값으로 완화한다. trigger/history.py의 ThresholdHistory 참고.
+PERCENTILE_HISTORY_MAXLEN = 100  # 세그먼트 수. SEGMENT_INTERVAL=5초 기준 약 8.3분 창.
+MIN_SAMPLES_FOR_PERCENTILE = 20  # 이 미만이면 DENSITY_LOW/HIGH, ZONE_MAX 고정값 사용
+DENSITY_LOW_PERCENTILE = 50
+DENSITY_HIGH_PERCENTILE = 90
+ZONE_MAX_PERCENTILE = 90
 
 # --- Agent ---
 AGENT_PROVIDER = os.getenv("AGENT_PROVIDER", "anthropic")  # "anthropic" | "gemini"

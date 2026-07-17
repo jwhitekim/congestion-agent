@@ -1,13 +1,41 @@
 from typing import Optional
 import config
 from datatypes import PerceptionResult, AggregatedFacts
-from .history import SegmentHistory
+from .history import SegmentHistory, ThresholdHistory
 
 
-def _classify_level(density: float) -> str:
-    if density < config.DENSITY_LOW:
+def _dynamic_thresholds(threshold_history: ThresholdHistory) -> dict:
+    """
+    percentile 기반 동적 임계값(density_low/high, zone_max)을 계산한다.
+
+    threshold_history 표본 수가 config.MIN_SAMPLES_FOR_PERCENTILE 미만이면
+    콜드스타트로 보고 기존 고정값(config.DENSITY_LOW/HIGH, config.ZONE_MAX)을
+    그대로 쓴다 — 표본이 너무 적으면 percentile 자체가 불안정하기 때문이다.
+    표본이 쌓이면 percentile로 자동 전환된다. 반환 dict의 "source"로 지금
+    어느 쪽이 쓰이고 있는지 세그먼트마다 판별·기록할 수 있다.
+    """
+    sample_count = len(threshold_history)
+    if sample_count < config.MIN_SAMPLES_FOR_PERCENTILE:
+        return {
+            "source": "fallback",
+            "density_low": config.DENSITY_LOW,
+            "density_high": config.DENSITY_HIGH,
+            "zone_max": config.ZONE_MAX,
+            "sample_count": sample_count,
+        }
+    return {
+        "source": "percentile",
+        "density_low": threshold_history.density_percentile(config.DENSITY_LOW_PERCENTILE),
+        "density_high": threshold_history.density_percentile(config.DENSITY_HIGH_PERCENTILE),
+        "zone_max": threshold_history.zone_max_percentile(config.ZONE_MAX_PERCENTILE),
+        "sample_count": sample_count,
+    }
+
+
+def _classify_level(density: float, density_low: float, density_high: float) -> str:
+    if density < density_low:
         return "low"
-    elif density < config.DENSITY_HIGH:
+    elif density < density_high:
         return "medium"
     return "high"
 
@@ -15,12 +43,16 @@ def _classify_level(density: float) -> str:
 def evaluate(
     current: PerceptionResult,
     history: SegmentHistory,
-) -> tuple[Optional[str], Optional[str], AggregatedFacts, list[str]]:
+    threshold_history: ThresholdHistory,
+) -> tuple[Optional[str], Optional[str], AggregatedFacts, list[str], dict]:
     """
     현재 PerceptionResult와 히스토리를 받아 트리거 여부를 판정한다.
 
-    반환: (trigger_name, reason, AggregatedFacts, co_triggered)
+    반환: (trigger_name, reason, AggregatedFacts, co_triggered, thresholds)
     트리거 없으면 trigger_name=None, reason=None, co_triggered=[].
+    thresholds: 이 세그먼트 판정에 실제로 쓰인 density_low/high, zone_max와
+    그 출처(fallback|percentile) — _dynamic_thresholds() 참고. session.jsonl에
+    그대로 기록해 언제부터 percentile로 전환됐는지 나중에 확인할 수 있게 한다.
 
     순간값이 아닌 변화율·지속시간 기반 조건을 사용한다.
 
@@ -33,13 +65,15 @@ def evaluate(
     않는다(실측: t=455에서 surge와 hotspot이 동시에 만족됐는데 기존
     if/elif 구조에선 surge만 남고 hotspot 발동 사실 자체가 사라졌음).
     """
+    thresholds = _dynamic_thresholds(threshold_history)
+
     avg_density = history.avg_density()
     density_delta_ratio = (
         current.density / avg_density if avg_density > 0 else 1.0
     )
     trend = history.speed_trend_with(current.avg_speed)
     density_slope = history.density_slope_with(current.density)
-    level = _classify_level(current.density)
+    level = _classify_level(current.density, thresholds["density_low"], thresholds["density_high"])
 
     facts = AggregatedFacts(
         current=current,
@@ -49,8 +83,10 @@ def evaluate(
         level=level,
     )
 
-    # 현재값을 히스토리에 추가 (delta 계산 이후에 추가해야 직전 평균이 기준이 됨)
+    # 현재값을 히스토리에 추가 (delta/percentile 계산 이후에 추가해야 직전 평균·분포가
+    # 기준이 됨 — threshold_history도 SegmentHistory와 동일한 순서 규칙을 따른다)
     history.add(current)
+    threshold_history.add(current.density, current.zone_counts)
 
     # --- 트리거 조건: 순간값이 아니라 변화·지속 기반 ---
     # 4개 다 독립적으로 판정해 matched에 모아둔다(첫 매치에서 멈추지 않음).
@@ -75,12 +111,15 @@ def evaluate(
             f"for {history_streak:.0f}s"
         )
 
-    # 3. Hotspot: 한 구역 인원이 ZONE_MAX 초과
+    # 3. Hotspot: 한 구역 인원이 (percentile 기반, 콜드스타트 시 고정값) zone_max 초과
     if current.zone_counts:
         hotspot_zone = max(current.zone_counts, key=current.zone_counts.get)
         hotspot_count = current.zone_counts[hotspot_zone]
-        if hotspot_count > config.ZONE_MAX:
-            matched["hotspot"] = f"hotspot: {hotspot_zone}구역 {hotspot_count}명 > 임계 {config.ZONE_MAX}"
+        if hotspot_count > thresholds["zone_max"]:
+            matched["hotspot"] = (
+                f"hotspot: {hotspot_zone}구역 {hotspot_count}명 > 임계 "
+                f"{thresholds['zone_max']:.1f} ({thresholds['source']})"
+            )
 
     # 4. Conflict: 순간값 기준 level은 "low"인데 추세(density_slope)는 가파르게
     #    상승 중인 경계 사례. surge는 직전 평균 대비 비율이라 완만하지만 꾸준한
@@ -102,6 +141,6 @@ def evaluate(
     for name in ("surge", "stagnation", "hotspot", "conflict"):
         if name in matched:
             co_triggered = [n for n in matched if n != name]
-            return name, matched[name], facts, co_triggered
+            return name, matched[name], facts, co_triggered, thresholds
 
-    return None, None, facts, []
+    return None, None, facts, [], thresholds
