@@ -9,7 +9,7 @@ class Detector:
 
     def __init__(self):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        model_path = os.path.join(config.MODEL_DIR, config.YOLO_FINE_TUNED_MODEL_NAME)
+        model_path = os.path.join(config.MODEL_DIR, config.ACTIVE_YOLO_MODEL)
         self._model = YOLO(model_path).to(self.device)
 
     def detect(self, frame, conf: float = 0.07) -> torch.Tensor:
@@ -21,6 +21,7 @@ class Detector:
             source=frame,
             conf=conf,
             device=self.device,
+            classes=[0],
             verbose=False,
         )[0]
 

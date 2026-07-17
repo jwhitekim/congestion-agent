@@ -5,8 +5,15 @@ load_dotenv()
 
 # --- Model ---
 MODEL_DIR = "models"
-YOLO_BASE_MODEL_NAME = "yolov8s.pt"
-YOLO_FINE_TUNED_MODEL_NAME = "capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt" 
+YOLO_BASE_MODEL_NAME = "yolov8m.pt"
+YOLO_FINE_TUNED_MODEL_NAME = "capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt"
+
+# 실제 로드에 쓰이는 모델 선택. "base" | "fine_tuned". 둘 다 위 이름을 그대로 참조하므로
+# capdi를 지우지 않고 비교/롤백 가능.
+YOLO_MODEL_CHOICE = os.getenv("YOLO_MODEL_CHOICE", "base")
+ACTIVE_YOLO_MODEL = (
+    YOLO_BASE_MODEL_NAME if YOLO_MODEL_CHOICE == "base" else YOLO_FINE_TUNED_MODEL_NAME
+)
 
 # --- Pipeline ---
 SEGMENT_INTERVAL = 5.0  # seconds between PerceptionResult emissions

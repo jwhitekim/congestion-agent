@@ -29,7 +29,9 @@ class Tracker:
         # 지점이므로 논문에 그렇게 밝혀야 한다. density 계산(perception/density.py의
         # calc_spatial_density, pipeline.py의 zone 계산)도 bbox 중심점만 쓰므로
         # 매칭 기준을 중심점으로 맞추는 것이 그 설계와 일관된 선택이기도 하다.
-        self._tracker = OCSort(det_thresh=det_thresh, max_age=50, min_hits=1, asso_func="ct_dist")
+        self._tracker = OCSort(
+            det_thresh=det_thresh, max_age=50, min_hits=1, asso_func="ct_dist", use_byte=True
+        )
 
     def update(self, detections: torch.Tensor) -> list:
         """
