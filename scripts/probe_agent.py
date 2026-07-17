@@ -68,7 +68,7 @@ PROBES = [
 def main() -> None:
     results = []
     for trigger_name, trigger_reason, facts in PROBES:
-        output = agent_loop.run(facts, trigger_name, trigger_reason)
+        output = agent_loop.run(facts, trigger_name, trigger_reason, config.ZONE_MAX)
         output_tokens_total = sum(
             c["output_tokens"] for c in output["api_call_breakdown"] if c.get("output_tokens") is not None
         )

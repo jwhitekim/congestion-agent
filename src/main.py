@@ -53,7 +53,9 @@ def main(video_path: str) -> None:
             agent_output = None
             if trigger_name is not None:
                 agent_start = time.perf_counter()
-                agent_output = agent_loop.run(agg_facts, trigger_name, trigger_reason, log=log)
+                agent_output = agent_loop.run(
+                    agg_facts, trigger_name, trigger_reason, thresholds["zone_max"], log=log
+                )
                 agent_elapsed = time.perf_counter() - agent_start
                 agent_output["agent_elapsed_sec"] = round(agent_elapsed, 3)
                 agent_output["api_round_trips"] = len(agent_output["api_call_breakdown"])

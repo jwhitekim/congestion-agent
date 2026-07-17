@@ -24,6 +24,7 @@ import json
 import sys
 from collections import Counter
 
+import config
 from agent import loop as agent_loop
 from probe_agent import PROBES
 
@@ -68,7 +69,7 @@ def _run_condition(trigger_name, trigger_reason, facts, include_reason: bool) ->
     runs = []
     for _ in range(REPEATS):
         output = agent_loop.run(
-            facts, trigger_name, trigger_reason, include_trigger_reason=include_reason
+            facts, trigger_name, trigger_reason, config.ZONE_MAX, include_trigger_reason=include_reason
         )
         runs.append(
             {

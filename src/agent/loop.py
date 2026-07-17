@@ -98,15 +98,21 @@ def _facts_to_text(facts: AggregatedFacts) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _compute_local_hotspots(facts: AggregatedFacts) -> list[str]:
+def _compute_local_hotspots(facts: AggregatedFacts, zone_max: float) -> list[str]:
     """
-    ZONE_MAX를 초과하는 구역을 나열한다. trigger/rules.py의 hotspot 조건과 동일한
+    zone_max를 초과하는 구역을 나열한다. trigger/rules.py의 hotspot 조건과 동일한
     순수 사실 조회이므로 코드가 계산해 주입한다 — LLM이 재생산하지 않는다.
+
+    zone_max는 호출부(main.py)가 rules.evaluate()의 thresholds["zone_max"]를 그대로
+    전달한 값이다 — config.ZONE_MAX를 여기서 직접 읽지 않는다. 두 곳이 각자 읽으면
+    rules.py가 percentile 기반 동적 임계값으로 바뀐 뒤에도 여기는 옛 고정값을 써서
+    같은 세그먼트의 trigger_reason과 local_hotspots가 서로 다른 기준으로 어긋나는
+    문제가 있었다(실측) — 그래서 rules.py를 유일한 계산 출처로 고정한다.
     """
     return [
         f"{zone}구역 {count}명"
         for zone, count in facts.current.zone_counts.items()
-        if count > config.ZONE_MAX
+        if count > zone_max
     ]
 
 
@@ -114,6 +120,7 @@ def run(
     facts: AggregatedFacts,
     trigger_name: str,
     trigger_reason: str,
+    zone_max: float,
     log=None,
     include_trigger_reason: bool = True,
 ) -> dict:
@@ -125,6 +132,11 @@ def run(
     hallucination 방어(_FORBIDDEN_NUMERIC)와는 무관하고, trigger가 이미 계산한
     사실을 그대로 전달하는 것이므로 perception=observations/LLM=judgment
     경계도 깨지 않는다.
+
+    zone_max: rules.evaluate()가 반환한 thresholds["zone_max"](percentile 기반
+    동적값, 콜드스타트 중엔 config.ZONE_MAX fallback)를 그대로 받는다.
+    local_hotspots 계산에 쓰는 임계값을 rules.py와 동일하게 맞추기 위함 —
+    config.ZONE_MAX를 여기서 다시 읽지 않는다(_compute_local_hotspots 참고).
 
     include_trigger_reason: False면 프롬프트에서 trigger_reason 문장을 뺀다
     (trigger_name만 남김). trigger_reason 주입 효과를 A/B로 비교하기 위한
@@ -185,7 +197,7 @@ def run(
     validated["total_people"] = facts.current.total
     validated["density"] = facts.current.density
     validated["congestion_level"] = facts.level
-    validated["local_hotspots"] = _compute_local_hotspots(facts)
+    validated["local_hotspots"] = _compute_local_hotspots(facts, zone_max)
     validated["trigger"] = trigger_name
     validated["tool_called"] = False
     validated["tool_raw"] = []
