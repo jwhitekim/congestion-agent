@@ -89,6 +89,7 @@ class _RawDetector:
             source=frame,
             conf=conf,
             device=self.device,
+            classes=[0],
             verbose=False,
         )[0]
 
