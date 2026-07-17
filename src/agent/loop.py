@@ -110,7 +110,13 @@ def _compute_local_hotspots(facts: AggregatedFacts) -> list[str]:
     ]
 
 
-def run(facts: AggregatedFacts, trigger_name: str, trigger_reason: str, log=None) -> dict:
+def run(
+    facts: AggregatedFacts,
+    trigger_name: str,
+    trigger_reason: str,
+    log=None,
+    include_trigger_reason: bool = True,
+) -> dict:
     """
     트리거 발생 시 에이전트를 1회 호출해 판정한다 (single-shot, tool 없음).
 
@@ -119,6 +125,11 @@ def run(facts: AggregatedFacts, trigger_name: str, trigger_reason: str, log=None
     hallucination 방어(_FORBIDDEN_NUMERIC)와는 무관하고, trigger가 이미 계산한
     사실을 그대로 전달하는 것이므로 perception=observations/LLM=judgment
     경계도 깨지 않는다.
+
+    include_trigger_reason: False면 프롬프트에서 trigger_reason 문장을 뺀다
+    (trigger_name만 남김). trigger_reason 주입 효과를 A/B로 비교하기 위한
+    연구용 스위치 — scripts/ab_trigger_reason.py 전용, 기본값 True라 기존
+    호출부(main.py 등)는 영향 없음.
 
     log: main.py의 GetLogger 인스턴스(선택). API 재시도 발생 시 log.warning으로
     기록한다 — 없으면 재시도는 조용히 진행된다(로깅만 생략, 재시도 자체는 동작).
@@ -132,7 +143,12 @@ def run(facts: AggregatedFacts, trigger_name: str, trigger_reason: str, log=None
       - api_call_breakdown: list[dict]  (연구용, API 왕복별 시간/토큰/stop_reason.
         single-shot이므로 원소는 항상 1개)
     """
-    user_message = f"트리거 발생: {trigger_name} ({trigger_reason})\n\n{_facts_to_text(facts)}\n위 사실을 바탕으로 상황을 판정하십시오."
+    trigger_line = (
+        f"트리거 발생: {trigger_name} ({trigger_reason})"
+        if include_trigger_reason
+        else f"트리거 발생: {trigger_name}"
+    )
+    user_message = f"{trigger_line}\n\n{_facts_to_text(facts)}\n위 사실을 바탕으로 상황을 판정하십시오."
 
     state = _provider.init_state(user_message)
 
