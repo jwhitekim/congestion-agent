@@ -25,8 +25,15 @@
 </div>
 
 {#if $sessions.length === 0}
-  <p>outputs/ 폴더에 세션이 없습니다.</p>
+  <div class="empty-state">
+    <h2>세션 없음</h2>
+    <p>outputs/ 폴더에 저장된 실행 결과가 없습니다.</p>
+  </div>
 {:else}
+  <div class="section-head session-list-head">
+    <h3>세션 목록</h3>
+    <span>{$sessions.length} sessions</span>
+  </div>
   <div class="session-list">
     {#each $sessions as s (s.session_id)}
       <button
@@ -40,9 +47,9 @@
         </div>
         <div class="session-meta">
           {#if s.ended_at}
-            <span class="badge done">✅ 완료</span>
+            <span class="badge done">완료</span>
           {:else}
-            <span class="badge running">🔴 실행 중</span>
+            <span class="badge running"><span class="status-dot"></span>실행 중</span>
           {/if}
           {#if s.segment_count !== undefined}
             <span class="segment-count">{s.segment_count}개 세그먼트</span>
