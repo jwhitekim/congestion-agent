@@ -59,28 +59,6 @@ class SegmentHistory:
                 break
         return streak * interval_sec
 
-    def high_density_streak_sec(self, density_threshold: float, interval_sec: float) -> float:
-        """버퍼 끝에서부터 연속으로 density_threshold를 초과했던 누적 시간(초)."""
-        streak = 0
-        for r in reversed(self._buffer):
-            if r.density > density_threshold:
-                streak += 1
-            else:
-                break
-        return streak * interval_sec
-
-    def density_exceedance_ratio(self, density_threshold: float) -> float:
-        """
-        버퍼 내에서 density_threshold를 초과한 세그먼트의 비율 (0.0~1.0).
-        high_density_streak_sec과 달리 연속성을 요구하지 않는다 — 초과가
-        간헐적으로 반복되는(연속되지 않는) 패턴도 잡아낸다.
-        버퍼가 비어 있으면 0.0.
-        """
-        if not self._buffer:
-            return 0.0
-        exceed = sum(1 for r in self._buffer if r.density > density_threshold)
-        return exceed / len(self._buffer)
-
     def density_slope_with(self, current_density: float) -> float:
         """
         버퍼 + current를 포함한 density의 선형회귀 기울기.
